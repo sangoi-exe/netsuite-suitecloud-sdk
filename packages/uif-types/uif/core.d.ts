@@ -3038,7 +3038,7 @@ declare module '@uif-js/core' {
 	namespace GenericDataSource {
 	}
 
-	export function HashRouter(props?: object): Self.JSX.Element;
+	export function HashRouter(props?: {children?: Self.VDom.Children}): Self.JSX.Element;
 
 	export class HierarchicalMap {
 		constructor(parent?: Self.HierarchicalMap);
@@ -3700,7 +3700,7 @@ declare module '@uif-js/core' {
 
 	}
 
-	export function JsxRoute(props?: {path?: string; content?: Self.Router.RouteContentCallback; exact?: boolean}): Self.JSX.Element;
+	export function JsxRoute(props?: {children?: Self.VDom.Children; path?: string; content?: Self.Router.RouteContentCallback; exact?: boolean}): Self.JSX.Element;
 
 	export enum KeyCode {
 		BACKSPACE,
@@ -4569,9 +4569,9 @@ declare module '@uif-js/core' {
 	export namespace PageMessageDispatcher {
 	}
 
-	export function ParamRouter(props: {name: string}): Self.JSX.Element;
+	export function ParamRouter(props: {name: string; children?: Self.VDom.Children}): Self.JSX.Element;
 
-	export function PathRouter(props?: {basename?: string}): Self.JSX.Element;
+	export function PathRouter(props?: {basename?: string; children?: Self.VDom.Children}): Self.JSX.Element;
 
 	export class PersistingFormatter extends Self.LogFormatter {
 		constructor();
@@ -4767,17 +4767,17 @@ declare module '@uif-js/core' {
 		}
 
 		interface SizeOptions {
-			height: number;
+			height?: number;
 
-			maxHeight: number;
+			minHeight?: number;
 
-			maxWidth: number;
+			maxHeight?: number;
 
-			minHeight: number;
+			width?: number;
 
-			minWidth: number;
+			minWidth?: number;
 
-			width: number;
+			maxWidth?: number;
 
 		}
 
@@ -8202,7 +8202,7 @@ declare module '@uif-js/core' {
 	export function VDom(type: (string | ((props?: object) => Self.VDomElement)), config?: object, children?: Self.VDom.Children): Self.VDomElement;
 
 	export namespace VDom {
-		type Node = (string | number | Self.VDomElement | null);
+		type Node = (string | number | Self.VDomElement | Self.Component | Self.Translation | null);
 
 		type Children = (Self.VDom.Node | globalThis.Array<Self.VDom.Node>);
 
