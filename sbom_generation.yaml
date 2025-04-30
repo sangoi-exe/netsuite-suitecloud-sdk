@@ -63,4 +63,12 @@ steps:
       yum install -y libicu
 
   - type: Command
-    name: "Merge
+    name: "Merge multiple SBOMs using CycloneDX-linux-cli"
+    command: |
+      # For more details, visit https://github.com/CycloneDX/cyclonedx-cli/blob/main/README.md
+      chmod +x cyclonedx-linux-x64
+      ./cyclonedx-linux-x64 merge --input-files artifactSBOM_node-cli_unit-testing.json packages/vscode-extension/artifactSBOM_vscode-extension.json --output-file artifactSBOM.json
+outputArtifacts:
+  - name: artifactSBOM
+    type: BINARY
+    location: ${OCI_PRIMARY_SOURCE_DIR}/artifactSBOM.json
