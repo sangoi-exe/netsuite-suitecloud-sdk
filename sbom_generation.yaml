@@ -1,7 +1,7 @@
 # Copyright (c) 2023, Oracle and/or its affiliates. All rights reserved.
 
 # This OCI DevOps build specification file [1] generates a Software Bill of Materials (SBOM) of the repository.
-# The file is needed to run checks for third-party vulnerabilities and business approval according to Oracle’s GitHub policies.
+# It is required for third-party vulnerability checks and business approval under Oracle’s GitHub policies.
 # [1] https://docs.oracle.com/en-us/iaas/Content/devops/using/build_specs.htm
 
 version: 0.1
@@ -11,37 +11,59 @@ shell: bash
 
 steps:
   - type: Command
-    name: "Install npm"
+    name: "Install Node.js 22 and matching npm"
     command: |
-      # Install npm version 8.19.4
-      npm i -g npm@v8.19.4
+      curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+      yum install -y nodejs
+      node -v
+      npm -v
+
   - type: Command
     name: "Install node-cli & unit-testing packages"
     command: |
-      rm package-lock.json && npm install --ignore-scripts
+      rm -f package-lock.json
+      npm install --ignore-scripts
+
   - type: Command
-    name: "Install cyclonedx globally"
+    name: "Install CycloneDX as dependency"
     command: |
-      npm install --ignore-scripts -g @cyclonedx/cyclonedx-npm
+      npm install --ignore-scripts
+      npm install --save-dev @cyclonedx/cyclonedx-npm@1.19.3 --ignore-scripts
+
+
   - type: Command
-    name: "Run cyclonedx for node-cli & unit-testing packages"
+    name: "Run CycloneDX for node-cli & unit-testing packages"
     command: |
-      # For more details, visit https://github.com/CycloneDX/cyclonedx-node-npm/blob/main/README.md
-      npx @cyclonedx/cyclonedx-npm --omit dev --output-format JSON --output-file artifactSBOM_node-cli_unit-testing.json --spec-version 1.4
+      npx @cyclonedx/cyclonedx-npm \
+        --omit dev \
+        --output-format JSON \
+        --output-file artifactSBOM_node-cli_unit-testing.json \
+        --spec-version 1.4
+
   - type: Command
     name: "Install vscode extension package"
     command: |
-      cd packages/vscode-extension && rm package-lock.json && npm install --ignore-scripts
+      cd packages/vscode-extension
+      rm -f package-lock.json
+      npm install --ignore-scripts
+
   - type: Command
-    name: "Run cyclonedx for vscode-extension package"
+    name: "Run CycloneDX for vscode-extension package"
     command: |
-      # For more details, visit https://github.com/CycloneDX/cyclonedx-node-npm/blob/main/README.md
-      cd packages/vscode-extension && npx @cyclonedx/cyclonedx-npm --omit dev --output-format JSON --output-file artifactSBOM_vscode-extension.json --spec-version 1.4
+      cd packages/vscode-extension
+      npx @cyclonedx/cyclonedx-npm \
+        --omit dev \
+        --output-format JSON \
+        --output-file artifactSBOM_vscode-extension.json \
+        --spec-version 1.4
+
   - type: Command
-    name: "Download CycloneDx-linux-cli executable and install dependencies"
+    name: "Download CycloneDX Linux CLI and install dependencies"
     command: |
-      wget https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.24.2/cyclonedx-linux-x64
+      wget -O cyclonedx-linux-x64 https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.24.2/cyclonedx-linux-x64
+      chmod +x cyclonedx-linux-x64
       yum install -y libicu
+
   - type: Command
     name: "Merge multiple SBOMs using CycloneDX-linux-cli"
     command: |
