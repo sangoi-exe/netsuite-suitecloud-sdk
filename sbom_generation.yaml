@@ -27,7 +27,9 @@ steps:
   - type: Command
     name: "Install CycloneDX as dependency"
     command: |
-      npm install --ignore-scripts && npm install --save-dev @cyclonedx/cyclonedx-npm@1.19.3
+      npm install --ignore-scripts
+      npm install --save-dev @cyclonedx/cyclonedx-npm@1.19.3 --ignore-scripts
+
 
   - type: Command
     name: "Run CycloneDX for node-cli & unit-testing packages"
