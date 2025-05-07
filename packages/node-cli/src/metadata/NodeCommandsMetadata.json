@@ -19,13 +19,13 @@
 	"account:switch": {
 		"name": "account:switch",
 		"alias": "sw",
-		"description": "[Verify With Montsant] Sets up the default account to use with SuiteCloud SDK on this SuiteCloud project.",
+		"description": "Switches the default auth ID for the current SuiteCloud project.",
 		"isSetupRequired": false,
 		"options": {
 			"authid": {
 				"name": "authid",
 				"option": "authid",
-				"description": "References the custom alias you give to a specific account-role combination.",
+				"description": "References the auth ID to be used by default in the current SuiteCloud project.",
 				"mandatory": true,
 				"type": "SINGLE",
 				"usage": "",
