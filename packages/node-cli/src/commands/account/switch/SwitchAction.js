@@ -8,6 +8,7 @@ const BaseAction = require('../../base/BaseAction');
 const SwitchAccountActionResult = require('../../../services/actionresult/SwitchAccountActionResult');
 const { setDefaultAuthentication } = require('../../../utils/AuthenticationUtils');
 const ProjectInfoService = require('../../../services/ProjectInfoService');
+const { FILES } = require('../../../ApplicationConstants');
 const {
 	validateFieldHasNoSpaces,
 	validateFieldIsNotEmpty,
@@ -16,6 +17,7 @@ const {
 	showValidationResults,
 } = require('../../../validation/InteractiveAnswersValidator');
 const { throwValidationException, unwrapExceptionMessage } = require('../../../utils/ExceptionUtils');
+const path = require('path');
 
 const COMMAND = {
 	OPTIONS: {
@@ -30,37 +32,21 @@ module.exports = class SetupAction extends BaseAction {
 		this._projectInfoService = new ProjectInfoService(this._projectFolder);
 	}
 
-	//TODO: [STEP 1] Validate in right folder
-
-	async preExecute(params) {
-		this._projectInfoService.checkWorkingDirectoryContainsValidProject(this._commandMetadata.name);
-
-		//TODO: Should we validate here?
-		return params;
-	}
-
-	//TODO: [STEP 2] Suitecloud calls Command._validateActionParameters(preExec) and validates command options
 
 	async execute(params) {
 		try {
+			const authID = params[COMMAND.OPTIONS.AUTHID];
 
-			//TODO: [STEP 3] Validate AuthId (Do we want to do it)?
-			let validationErrors= this._validateParams(params);
-			if (validationErrors.length > 0) {
-				validationErrors = validationErrors.map(error => `Invalid auth Id: ${error}`); //TODO: (* __ *)
-				throwValidationException(validationErrors, false, this._commandMetadata);
-			}
+			// Validate AuthID value and inside SuiteCloud project folder
+			this._validateAuthID(authID);
+			this._projectInfoService.checkWorkingDirectoryContainsValidProject(this._commandMetadata.name);
 
-			//TODO: [STEP 4] Exec Command
-			const authId = params[COMMAND.OPTIONS.AUTHID];
-			setDefaultAuthentication(this._executionPath, authId);
-
-			// SPINNER
-
+			// execute Action
+			setDefaultAuthentication(this._executionPath, authID);
 			return SwitchAccountActionResult.Builder
-				.withSuccess()
-				.withProjectDirectory(this._executionPath)
-				.withAuthId(authId)
+				.withData({'projectFilePath' : path.join(this._executionPath, FILES.PROJECT_JSON)})
+				.withProjectFolder(this._executionPath)
+				.withAuthId(authID)
 				.build();
 
 		} catch (error) {
@@ -68,18 +54,20 @@ module.exports = class SetupAction extends BaseAction {
 		}
 	}
 
-	_validateParams(params) {
-		const validationErrors = [];
-		validationErrors.push(
-			showValidationResults(
-				params[COMMAND.OPTIONS.AUTHID],
+	_validateAuthID(authId) {
+		const validateResult = showValidationResults(
+				authId,
 				validateFieldIsNotEmpty,	// This never throws error (is thrown earlier): "This value cannot be empty.",
 				validateFieldHasNoSpaces,	// "This field cannot contain spaces.",
 				validateAlphanumericHyphenUnderscore,	// "This field contains forbidden characters. Use only alphanumerical characters, hyphens, or underscores.",
 				validateMaximumLength	// "This field can only contain up to {0} characters.",
-			)
 		);
 
-		return validationErrors.filter((item) => item !== true);
+		if (validateResult !== true) {
+			throwValidationException(['Invalid auth Id: ' + validateResult], false, this._commandMetadata);
+
+			// Note to self: We can use this to print desired message and skip the "There are validation errors:"
+			// 		throw new CLIException(formattedError);
+		}
 	}
 };
