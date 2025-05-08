@@ -64,10 +64,7 @@ module.exports = class SetupAction extends BaseAction {
 		);
 
 		if (validateResult !== true) {
-			throwValidationException(['Invalid auth Id: ' + validateResult], false, this._commandMetadata);
-
-			// Note to self: We can use this to print desired message and skip the "There are validation errors:"
-			// 		throw new CLIException(formattedError);
+			throwValidationException(['authid: ' + validateResult], false, this._commandMetadata);
 		}
 	}
 };
