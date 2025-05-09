@@ -18,6 +18,8 @@ const {
 } = require('../../../validation/InteractiveAnswersValidator');
 const { throwValidationException, unwrapExceptionMessage } = require('../../../utils/ExceptionUtils');
 const path = require('path');
+const NodeTranslationService = require('../../../services/NodeTranslationService');
+const TRANSLATION_KEYS = require('../../../services/TranslationKeys');
 
 const COMMAND = {
 	OPTIONS: {
@@ -64,7 +66,11 @@ module.exports = class SetupAction extends BaseAction {
 		);
 
 		if (validateResult !== true) {
-			throwValidationException(['authid: ' + validateResult], false, this._commandMetadata);
+			throwValidationException(
+				[NodeTranslationService.getMessage(TRANSLATION_KEYS.COMMAND_OPTIONS.VALIDATION_SHOW_ERROR_MESSAGE, authId, validateResult)],
+				false,
+				this._commandMetadata
+			);
 		}
 	}
 };
