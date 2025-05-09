@@ -67,7 +67,7 @@ module.exports = class SetupAction extends BaseAction {
 
 		if (validateResult !== true) {
 			throwValidationException(
-				[NodeTranslationService.getMessage(TRANSLATION_KEYS.COMMAND_OPTIONS.VALIDATION_SHOW_ERROR_MESSAGE, authId, validateResult)],
+				[NodeTranslationService.getMessage(TRANSLATION_KEYS.COMMAND_OPTIONS.VALIDATION_SHOW_ERROR_MESSAGE, "authid", validateResult)],
 				false,
 				this._commandMetadata
 			);
