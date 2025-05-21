@@ -3,7 +3,7 @@
 # SuiteCloud SDK
 SuiteCloud Software Development Kit (SuiteCloud SDK) are the set of tools that let you customize accounts and create SuiteApps through SuiteCloud Development Framework (SDF).
 
-In this GitHub repository, the following SuiteCloud SDK tools are available:
+In this GitHub repository, the following SuiteCloud SDK tools and packages are available:
 - [SuiteCloud CLI for Node.js](./packages/node-cli)<a href="https://www.npmjs.com/package/@oracle/suitecloud-cli">
     <img src="https://img.shields.io/npm/dm/@oracle/suitecloud-cli.svg" alt="npm-cli-nodejs"/>
     <img src="https://img.shields.io/npm/v/@oracle/suitecloud-cli.svg" alt="npm-cli-nodejs"/>
@@ -17,6 +17,11 @@ In this GitHub repository, the following SuiteCloud SDK tools are available:
 - [SuiteCloud Unit Testing](./packages/unit-testing)<a href="https://www.npmjs.com/package/@oracle/suitecloud-unit-testing">
     <img src="https://img.shields.io/npm/dm/@oracle/suitecloud-unit-testing.svg" alt="npm-unit-testing"/>
     <img src="https://img.shields.io/npm/v/@oracle/suitecloud-unit-testing.svg" alt="npm-unit-testing"/>
+</a>
+
+- [UIF Types](./packages/uif-types)<a href="https://www.npmjs.com/package/@oracle/netsuite-uif-types">
+    <img src="https://img.shields.io/npm/dm/@oracle/netsuite-uif-types.svg" alt="npm-uif-types"/>
+    <img src="https://img.shields.io/npm/v/@oracle/netsuite-uif-types.svg" alt="npm-uif-types"/>
 </a>
 
 ## Release Notes & Documentation
