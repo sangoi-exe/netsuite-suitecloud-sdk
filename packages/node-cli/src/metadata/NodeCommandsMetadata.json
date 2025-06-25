@@ -15,23 +15,5 @@
 				"disableInIntegrationMode": false
 			}
 		}
-	},
-	"account:switch": {
-		"name": "account:switch",
-		"alias": "sw",
-		"description": "[Verify With Montsant] Sets up the default account to use with SuiteCloud SDK on this SuiteCloud project.",
-		"isSetupRequired": false,
-		"options": {
-			"authid": {
-				"name": "authid",
-				"option": "authid",
-				"description": "References the custom alias you give to a specific account-role combination.",
-				"mandatory": true,
-				"type": "SINGLE",
-				"usage": "",
-				"defaultOption": false,
-				"disableInIntegrationMode": false
-			}
-		}
 	}
 }
