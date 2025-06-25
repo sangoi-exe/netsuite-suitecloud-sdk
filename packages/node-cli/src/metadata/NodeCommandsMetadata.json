@@ -19,13 +19,13 @@
 	"account:switch": {
 		"name": "account:switch",
 		"alias": "sw",
-		"description": "Switches the default auth ID for the SuiteCloud project.",
+		"description": "Switches the default auth ID for the current SuiteCloud project.",
 		"isSetupRequired": false,
 		"options": {
 			"authid": {
 				"name": "authid",
 				"option": "authid",
-				"description": "References the auth ID to be used by default in the SuiteCloud project.",
+				"description": "References the auth ID to be used by default in the current SuiteCloud project.",
 				"mandatory": true,
 				"type": "SINGLE",
 				"usage": "",

@@ -195,7 +195,7 @@
 
 	"COMMAND_SETUPACCOUNTCI_OUTPUT_NEW_OAUTH": "The authentication was successful with the following account and role: {0} [{1}]. This project will use the authentication ID \"{2}\" as default.",
 
-	"COMMAND_SWITCHACCOUNT_OUTPUT_NEW_DEFAULT_ACCOUNT": "The auth ID was successfully changed. This project will use the authentication ID \"{0}\" as default.",
+	"COMMAND_SWITCHACCOUNT_OUTPUT_NEW_DEFAULT_ACCOUNT": "[Placeholder Message 1a] Successfully completed Authentication Switch action \"{0}\".",
 
 	"COMMAND_UPDATE_ERRORS_CUSTOM_RECORD": "{0} was not updated. {1}",
 	"COMMAND_UPDATE_ERRORS_NO_OBJECTS_IN_PROJECT": "The \"Objects\" folder of your project does not contain any objects. Run \"suitecloud object:import -i\" to import objects from your account to your project.",
