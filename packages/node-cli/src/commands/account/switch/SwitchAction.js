@@ -57,10 +57,10 @@ module.exports = class SetupAction extends BaseAction {
 	_validateAuthID(authId) {
 		const validateResult = showValidationResults(
 				authId,
-				validateFieldIsNotEmpty,
-				validateFieldHasNoSpaces,
-				validateAlphanumericHyphenUnderscore,
-				validateMaximumLength
+				validateFieldIsNotEmpty,	// This never throws error (is thrown earlier): "This value cannot be empty.",
+				validateFieldHasNoSpaces,	// "This field cannot contain spaces.",
+				validateAlphanumericHyphenUnderscore,	// "This field contains forbidden characters. Use only alphanumerical characters, hyphens, or underscores.",
+				validateMaximumLength	// "This field can only contain up to {0} characters.",
 		);
 
 		if (validateResult !== true) {
