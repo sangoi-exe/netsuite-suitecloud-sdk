@@ -15,7 +15,7 @@ class SwitchAccountActionResult extends ActionResult {
 	validateParameters(parameters) {
 		super.validateParameters(parameters);
 		if (parameters.status === STATUS.SUCCESS) {
-			assert(parameters.authId, 'authId is required when ActionResult is a success.');
+			assert(parameters.authId, '_authId is required when ActionResult is a success.');
 		}
 	}
 
