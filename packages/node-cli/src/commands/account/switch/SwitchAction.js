@@ -47,7 +47,7 @@ module.exports = class SetupAction extends BaseAction {
 			//TODO: [STEP 3] Validate AuthId (Do we want to do it)?
 			let validationErrors= this._validateParams(params);
 			if (validationErrors.length > 0) {
-				validationErrors = validationErrors.map(error => `Invalid auth Id: ${error}`); //TODO: (* __ *)
+				validationErrors = validationErrors.map(error => `Invalid authId: ${error}`); //TODO: (* __ *)
 				throwValidationException(validationErrors, false, this._commandMetadata);
 			}
 

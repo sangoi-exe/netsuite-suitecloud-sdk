@@ -19,6 +19,7 @@ module.exports = class SetupOutputHandler extends BaseOutputHandler {
 			);
 
 			this._log.result(resultMessage);
+			this._log.result("[Placeholder Message 2b] Successful account switch.");
 			return actionResult;
 		}
 	};
