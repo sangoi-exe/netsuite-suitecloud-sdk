@@ -1,5 +1,5 @@
 /*
- ** Copyright (c) 2025 Oracle and/or its affiliates.  All rights reserved.
+ ** Copyright (c) 2024 Oracle and/or its affiliates.  All rights reserved.
  ** Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
  */
 'use strict';
@@ -31,7 +31,6 @@ module.exports = class SetupAction extends BaseAction {
 	}
 
 	//TODO: [STEP 1] Validate in right folder
-
 	async preExecute(params) {
 		this._projectInfoService.checkWorkingDirectoryContainsValidProject(this._commandMetadata.name);
 
@@ -47,15 +46,13 @@ module.exports = class SetupAction extends BaseAction {
 			//TODO: [STEP 3] Validate AuthId (Do we want to do it)?
 			let validationErrors= this._validateParams(params);
 			if (validationErrors.length > 0) {
-				validationErrors = validationErrors.map(error => `Invalid authId: ${error}`); //TODO: (* __ *)
+				validationErrors = validationErrors.map(error => `Invalid AuthId: ${error}`); //TODO: (* __ *)
 				throwValidationException(validationErrors, false, this._commandMetadata);
 			}
 
 			//TODO: [STEP 4] Exec Command
 			const authId = params[COMMAND.OPTIONS.AUTHID];
 			setDefaultAuthentication(this._executionPath, authId);
-
-			// SPINNER
 
 			return SwitchAccountActionResult.Builder
 				.withSuccess()
