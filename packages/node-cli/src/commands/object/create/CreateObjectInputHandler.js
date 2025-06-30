@@ -4,7 +4,8 @@
  */
 'use strict';
 /**
- * This class is deprecated
+ * The create:object command is no longer in use; as a result, this class is now deprecated. If there is a need to use this class in the future,
+ * the imports and implementation related to chalk and inquirer will need to be updated accordingly.
  */
 const OBJECT_TYPES = require('../../../metadata/ObjectTypesMetadata');
 // const { prompt } = require('inquirer');
