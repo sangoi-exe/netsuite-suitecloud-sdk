@@ -40,8 +40,8 @@ class NodeConsoleLogger extends ConsoleLogger {
 
 	_println(message, color, isBold) {
 		let formatterString = this._formatString(message, { color: color, bold: isBold });
-		formatterString.then(chalkFormatter => {
-			console.log(chalkFormatter);
+		formatterString.then(formattedString => {
+			console.log(formattedString);
 		});
 	}
 

@@ -4,7 +4,7 @@
  */
 'use strict';
 
-const { default: { prompt} } = require('inquirer');
+const { default: { prompt } } = require('inquirer');
 const BaseInputHandler = require('../../base/BaseInputHandler');
 const CommandUtils = require('../../../utils/CommandUtils');
 const FileCabinetService = require('../../../services/FileCabinetService');

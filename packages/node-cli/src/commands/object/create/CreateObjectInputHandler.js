@@ -3,7 +3,9 @@
  ** Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
  */
 'use strict';
-
+/**
+ * This class is deprecated
+ */
 const OBJECT_TYPES = require('../../../metadata/ObjectTypesMetadata');
 // const { prompt } = require('inquirer');
 // const chalk = require('chalk');
