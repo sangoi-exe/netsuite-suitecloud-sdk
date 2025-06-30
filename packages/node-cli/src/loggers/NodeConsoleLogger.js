@@ -4,35 +4,50 @@
  */
 'use strict';
 
-const chalk = require('chalk');
 const ConsoleLogger = require('./ConsoleLogger');
-const { COLORS } = require('./LoggerConstants');
+
+const loadLoggerFontFormatter = async () => {
+	const { COLORS, BOLD } = await import('./LoggerFontFormatter.mjs');
+	return { COLORS, BOLD };
+};
+const fontFormatterPromise = loadLoggerFontFormatter();
 
 class NodeConsoleLogger extends ConsoleLogger {
 
 	info(message) {
-		this._println(message, COLORS.INFO);
+		fontFormatterPromise.then(({ COLORS: { INFO } }) => {
+			this._println(message, INFO);
+		});
 	}
 
 	result(message) {
-		this._println(message, COLORS.RESULT);
+		fontFormatterPromise.then(({ COLORS: { RESULT } }) => {
+			this._println(message, RESULT);
+		});
 	}
 
 	warning(message) {
-		this._println(message, COLORS.WARNING);
+		fontFormatterPromise.then(({ COLORS: { WARNING } }) => {
+			this._println(message, WARNING);
+		});
 	}
 
 	error(message) {
-		this._println(message, COLORS.ERROR);
+		fontFormatterPromise.then(({ COLORS: { ERROR } }) => {
+			this._println(message, ERROR);
+		});
 	}
 
 	_println(message, color, isBold) {
-		console.log(this._formatString(message, { color: color, bold: isBold }));
+		let formatterString = this._formatString(message, { color: color, bold: isBold });
+		formatterString.then(chalkFormatter => {
+			console.log(chalkFormatter);
+		});
 	}
 
-	_formatString(str, options) {
-		const color = options.color || COLORS.DEFAULT;
-		const bold = options.bold ? chalk.bold : str => str;
+	async _formatString(str, options) {
+		const color = options.color || fontFormatterPromise.DEFAULT;
+		const bold = options.bold ? fontFormatterPromise.BOLD : str => str;
 		return bold(color(str));
 	}
 }
