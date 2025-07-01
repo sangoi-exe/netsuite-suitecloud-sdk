@@ -38,18 +38,17 @@ class NodeConsoleLogger extends ConsoleLogger {
 		});
 	}
 
-	_println(message, color, isBold) {
-		let formatterString = this._formatString(message, { color: color, bold: isBold });
-		formatterString.then(formattedString => {
+	_println(message, color) {
+		let formatterString = this._formatString(message, color);
+		formattedString.then(formattedString => {
 			console.log(formattedString);
 		});
 	}
 
-	async _formatString(str, options) {
-		const color = options.color || fontFormatterPromise.DEFAULT;
-		const bold = options.bold ? fontFormatterPromise.BOLD : str => str;
-		return bold(color(str));
+	async _formatString(str, color) {
+		return color(str);
 	}
 }
 
 module.exports = new NodeConsoleLogger();
+_orub
