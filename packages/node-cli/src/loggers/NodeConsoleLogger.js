@@ -51,4 +51,3 @@ class NodeConsoleLogger extends ConsoleLogger {
 }
 
 module.exports = new NodeConsoleLogger();
-_orub
