@@ -39,15 +39,9 @@ class NodeConsoleLogger extends ConsoleLogger {
 	}
 
 	_println(message, color) {
-		let formattedString = this._formatString(message, color);
-		formattedString.then(formattedString => {
-			console.log(formattedString);
-		});
+		console.log(color(message));
 	}
 
-	async _formatString(str, color) {
-		return color(str);
-	}
 }
 
 module.exports = new NodeConsoleLogger();
