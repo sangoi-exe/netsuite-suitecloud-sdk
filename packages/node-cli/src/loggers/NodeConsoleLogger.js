@@ -39,7 +39,7 @@ class NodeConsoleLogger extends ConsoleLogger {
 	}
 
 	_println(message, color) {
-		let formatterString = this._formatString(message, color);
+		let formattedString = this._formatString(message, color);
 		formattedString.then(formattedString => {
 			console.log(formattedString);
 		});
