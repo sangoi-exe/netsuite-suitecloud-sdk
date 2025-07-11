@@ -172,7 +172,6 @@
 	"COMMAND_OPTIONS_IS_MANDATORY": "\"{0}\" option is mandatory.",
 	"COMMAND_OPTIONS_VALIDATION_ERRORS": "There are validation errors:",
 	"COMMAND_OPTIONS_VALIDATION_ERRORS_INTERACTIVE_SUGGESTION": "You can use the interactive mode by running \"suitecloud {0} -i\"",
-	"COMMAND_OPTIONS_VALIDATION_SHOW_ERROR_MESSAGE": "{0}: {1}",
 
 	"COMMAND_PACKAGE_LOCAL_VALIDATION_NOT_EXECUTED": "The project is being packaged without validation. Make sure the project is validated.",
 	"COMMAND_PACKAGE_PACKAGING": "Packaging...",
@@ -195,8 +194,6 @@
 	"COMMAND_SETUPACCOUNT_OUTPUT_REUSED_AUTH_ID": "This project will use the authentication ID \"{0}\" as default for the following company and role: {1} [{2}]. If you want to change your default credentials, run \"suitecloud account:setup\" again.",
 
 	"COMMAND_SETUPACCOUNTCI_OUTPUT_NEW_OAUTH": "The authentication was successful with the following account and role: {0} [{1}]. This project will use the authentication ID \"{2}\" as default.",
-
-	"COMMAND_SWITCHACCOUNT_OUTPUT_NEW_DEFAULT_ACCOUNT": "The authentication ID was successfully changed. This project will use the auth ID \"{0}\" as default.",
 
 	"COMMAND_UPDATE_ERRORS_CUSTOM_RECORD": "{0} was not updated. {1}",
 	"COMMAND_UPDATE_ERRORS_NO_OBJECTS_IN_PROJECT": "The \"Objects\" folder of your project does not contain any objects. Run \"suitecloud object:import -i\" to import objects from your account to your project.",

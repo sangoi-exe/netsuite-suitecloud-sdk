@@ -15,23 +15,5 @@
 				"disableInIntegrationMode": false
 			}
 		}
-	},
-	"account:switch": {
-		"name": "account:switch",
-		"alias": "sw",
-		"description": "Switches the default auth ID for the SuiteCloud project.",
-		"isSetupRequired": false,
-		"options": {
-			"authid": {
-				"name": "authid",
-				"option": "authid",
-				"description": "References the auth ID to be used by default in the SuiteCloud project.",
-				"mandatory": true,
-				"type": "SINGLE",
-				"usage": "",
-				"defaultOption": false,
-				"disableInIntegrationMode": false
-			}
-		}
 	}
 }

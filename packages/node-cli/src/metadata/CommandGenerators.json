@@ -15,11 +15,6 @@
 		"generator": "./commands/account/setupci/AccountSetupCiCommand"
 	},
 	{
-		"commandName": "account:switch",
-		"supportsInteractiveMode": false,
-		"generator": "./commands/account/switch/SwitchCommand"
-	},
-	{
 		"commandName": "file:create",
 		"supportsInteractiveMode": true,
 		"generator": "commands/file/create/CreateFileCommand"
