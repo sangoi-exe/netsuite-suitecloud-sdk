@@ -25,8 +25,8 @@ The following table shows the extension versions currently available in the Mark
 
 | Extension Versions Available in the Marketplace | Available Since | Compatible NetSuite Version |
 |:-----------------------------------------------:|:---------------:|:---------------------------:|
-| 3.0.0 | 2025.1 | 2024.2 and 2025.1 |
-| 2.0.X | 2024.2 | 2024.1 and 2024.2 |
+| 3.0.1 | 2025.2 | 2025.1 and 2025.2 |
+| 3.0.x | 2025.1 | 2024.2 and 2025.1 |
 
 ## Installing SuiteCloud Extension for Visual Studio Code
 To install SuiteCloud Extension for Visual Studio Code, follow these steps:
