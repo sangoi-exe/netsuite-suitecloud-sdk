@@ -15,25 +15,25 @@ const fontFormatterPromise = loadLoggerFontFormatter();
 class NodeConsoleLogger extends ConsoleLogger {
 
 	info(message) {
-		fontFormatterPromise.then(({ COLORS: { INFO } }) => {
+		return fontFormatterPromise.then(({ COLORS: { INFO } }) => {
 			this._println(message, INFO);
 		});
 	}
 
 	result(message) {
-		fontFormatterPromise.then(({ COLORS: { RESULT } }) => {
+		return fontFormatterPromise.then(({ COLORS: { RESULT } }) => {
 			this._println(message, RESULT);
 		});
 	}
 
 	warning(message) {
-		fontFormatterPromise.then(({ COLORS: { WARNING } }) => {
+		return fontFormatterPromise.then(({ COLORS: { WARNING } }) => {
 			this._println(message, WARNING);
 		});
 	}
 
 	error(message) {
-		fontFormatterPromise.then(({ COLORS: { ERROR } }) => {
+		return fontFormatterPromise.then(({ COLORS: { ERROR } }) => {
 			this._println(message, ERROR);
 		});
 	}
