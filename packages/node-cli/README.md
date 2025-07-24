@@ -101,6 +101,6 @@ To read the 2025.1 NetSuite's release notes and documentation, check the followi
 SuiteCloud CLI for Node.js is an open source project. Pull Requests are currently not being accepted. See [Contributing](/CONTRIBUTING.md) for details.
 
 ## [License](/LICENSE.txt)
-Copyright (c) 2022, 2023, 2024, 2025 Oracle and/or its affiliates The Universal Permissive License (UPL), Version 1.0.
+Copyright (c) 2019, 2023 Oracle and/or its affiliates The Universal Permissive License (UPL), Version 1.0.
 
 By installing SuiteCloud CLI for Node.js, you are accepting the installation of the SuiteCloud SDK dependency under the [Oracle Free Use Terms and Conditions](https://www.oracle.com/downloads/licenses/oracle-free-license.html) license.
