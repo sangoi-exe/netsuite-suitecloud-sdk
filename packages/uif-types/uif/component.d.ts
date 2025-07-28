@@ -156,6 +156,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface JsxItemProps extends Self.AccordionPanel.BaseItemProps {
+			children?: PackageCore.VDom.Children;
+
 			key?: any;
 
 		}
@@ -204,6 +206,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			decorator?: PackageCore.Decorator;
 
 			fullyCollapsible?: boolean;
@@ -268,6 +272,8 @@ declare module '@uif-js/component' {
 
 	export namespace AccordionPanelItem {
 		interface Options {
+			children?: PackageCore.VDom.Children;
+
 			label?: (string | PackageCore.Translation);
 
 			expanded?: boolean;
@@ -1107,6 +1113,8 @@ declare module '@uif-js/component' {
 
 	export namespace Badge {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: (string | number | PackageCore.Translation);
 
 			end?: boolean;
@@ -1154,6 +1162,8 @@ declare module '@uif-js/component' {
 
 	export namespace Banner {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content: (PackageCore.Component | PackageCore.JSX.Element);
 
 			title?: (string | number | PackageCore.Translation);
@@ -1213,6 +1223,8 @@ declare module '@uif-js/component' {
 
 	export namespace BannerMessage {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: (string | PackageCore.Translation | PackageCore.Component | PackageCore.JSX.Element);
 
 			layout?: Self.BannerMessage.Layout;
@@ -1267,6 +1279,8 @@ declare module '@uif-js/component' {
 
 	export namespace BannerPanel {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			messages?: globalThis.Array<Self.BannerMessage>;
 
 			position?: Self.BannerPanel.Position;
@@ -1341,6 +1355,8 @@ declare module '@uif-js/component' {
 
 	export namespace Breadcrumbs {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			expandStrategy?: Self.Breadcrumbs.ExpandStrategy;
 
 			overflowStrategy?: Self.Breadcrumbs.OverflowStrategy;
@@ -1378,7 +1394,7 @@ declare module '@uif-js/component' {
 	}
 
 	export class BreadcrumbsItem extends PackageCore.Component {
-		constructor(options?: Self.Breadcrumbs.Options);
+		constructor(options?: Self.BreadcrumbsItem.Options);
 
 		label: (string | number | PackageCore.Translation);
 
@@ -1444,9 +1460,13 @@ declare module '@uif-js/component' {
 
 			menu?: globalThis.Array<object>;
 
+			children?: PackageCore.VDom.Children;
+
 		}
 
 		interface Options extends Self.BreadcrumbsItem.BaseProps {
+			children?: PackageCore.VDom.Children;
+
 			label?: (string | number | PackageCore.Translation);
 
 		}
@@ -2398,6 +2418,8 @@ declare module '@uif-js/component' {
 
 	export namespace Card {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			decorator?: PackageCore.Decorator;
 
 			image?: (string | PackageCore.Url | Self.Image);
@@ -2954,6 +2976,8 @@ declare module '@uif-js/component' {
 
 	export namespace Code {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: string;
 
 			language?: Self.Code.Language;
@@ -3783,6 +3807,8 @@ declare module '@uif-js/component' {
 
 	export namespace ContentPanel {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: (PackageCore.Component | PackageCore.JSX.Element);
 
 			decorator?: PackageCore.Decorator;
@@ -5440,6 +5466,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			label?: (string | number | PackageCore.Translation);
 
 			control?: (PackageCore.Component | PackageCore.JSX.Element | Self.Field.ControlOptions);
@@ -5529,6 +5557,8 @@ declare module '@uif-js/component' {
 
 	export namespace FieldGroup {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			title: (string | number | PackageCore.Translation);
 
 			color?: Self.FieldGroup.Color;
@@ -6017,23 +6047,23 @@ declare module '@uif-js/component' {
 
 		}
 
-		function createCheckBoxFilter(options: {automationId?: string; id: string; label: string; binding?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: boolean}): Self.FilterFactory.Filter;
+		function createCheckBoxFilter(options: {automationId?: string; id: string; label: (string | PackageCore.Translation); binding?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: boolean}): Self.FilterFactory.Filter;
 
-		function createToggleFilter(options: {automationId?: string; id: string; label: string; binding?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: boolean}): Self.FilterFactory.Filter;
+		function createToggleFilter(options: {automationId?: string; id: string; label: (string | PackageCore.Translation); binding?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: boolean}): Self.FilterFactory.Filter;
 
-		function createTextBoxFilter(options: {automationId?: string; id: string; label: string; binding?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: string; matchingOperator?: Self.FilterFactoryConstant.TextBoxFilterMatchingOperator}): Self.FilterFactory.Filter;
+		function createTextBoxFilter(options: {automationId?: string; id: string; label: (string | PackageCore.Translation); binding?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: string; matchingOperator?: Self.FilterFactoryConstant.TextBoxFilterMatchingOperator}): Self.FilterFactory.Filter;
 
-		function createDropdownFilter(options: {automationId?: string; id: string; label: string; dataProvider: () => PackageCore.DataSource; valueMember: string; displayMember: string; binding?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: any}): Self.FilterFactory.Filter;
+		function createDropdownFilter(options: {automationId?: string; id: string; label: (string | PackageCore.Translation); dataProvider: () => PackageCore.DataSource; valueMember: string; displayMember: string; binding?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: any}): Self.FilterFactory.Filter;
 
-		function createMultiselectDropdownFilter(options: {automationId?: string; id: string; label: string; dataProvider: () => PackageCore.DataSource; valueMember: string; displayMember: string; binding?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: globalThis.Array<any>}): Self.FilterFactory.Filter;
+		function createMultiselectDropdownFilter(options: {automationId?: string; id: string; label: (string | PackageCore.Translation); dataProvider: () => PackageCore.DataSource; valueMember: string; displayMember: string; binding?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: globalThis.Array<any>}): Self.FilterFactory.Filter;
 
-		function createDateFilter(options: {automationId?: string; id: string; label: string; binding?: (string | ((item: any) => PackageCore.Date)); filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: PackageCore.Date}): Self.FilterFactory.Filter;
+		function createDateFilter(options: {automationId?: string; id: string; label: (string | PackageCore.Translation); binding?: (string | ((item: any) => PackageCore.Date)); filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: PackageCore.Date}): Self.FilterFactory.Filter;
 
-		function createDateRangeFilter(options: {automationId?: string; id: string; label: string; binding?: (string | ((item: any) => PackageCore.Date)); filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: Self.DateRange.Range}): Self.FilterFactory.Filter;
+		function createDateRangeFilter(options: {automationId?: string; id: string; label: (string | PackageCore.Translation); binding?: (string | ((item: any) => PackageCore.Date)); filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: Self.DateRange.Range}): Self.FilterFactory.Filter;
 
-		function createTimeFilter(options: {id: string; label: string; binding?: (string | ((item: any) => PackageCore.Time)); format?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: PackageCore.Time}): Self.FilterFactory.Filter;
+		function createTimeFilter(options: {id: string; label: (string | PackageCore.Translation); binding?: (string | ((item: any) => PackageCore.Time)); format?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: PackageCore.Time}): Self.FilterFactory.Filter;
 
-		function createTimeRangeFilter(options: {id: string; label: string; binding?: (string | ((item: any) => PackageCore.Time)); format?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: {start: PackageCore.Time; end: PackageCore.Time}}): Self.FilterFactory.Filter;
+		function createTimeRangeFilter(options: {id: string; label: (string | PackageCore.Translation); binding?: (string | ((item: any) => PackageCore.Time)); format?: string; filterPredicate?: Self.FilterFactory.FilterPredicateCallback; value?: {start: PackageCore.Time; end: PackageCore.Time}}): Self.FilterFactory.Filter;
 
 		function create(type: Self.FilterFactoryConstant.FilterType, options: object): Self.FilterFactory.Filter;
 
@@ -6089,6 +6119,8 @@ declare module '@uif-js/component' {
 
 	export namespace FilterPanel {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			filters: globalThis.Array<Self.FilterPanel.FilterDefinition>;
 
 			orientation?: Self.FilterPanel.Orientation;
@@ -6215,6 +6247,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			decorator?: PackageCore.Decorator;
 
 			formatter?: Self.FormattedText.Formatter;
@@ -6260,6 +6294,8 @@ declare module '@uif-js/component' {
 		endDate: PackageCore.Date;
 
 		projectCalendar: Self.GanttChart.Id;
+
+		resourceStyle: (string | PackageCore.Style | object | Self.GanttChart.ResourceStyleCallback | null);
 
 		timeRanges: (globalThis.Array<Self.GanttChart.TimeRange> | null);
 
@@ -6341,6 +6377,10 @@ declare module '@uif-js/component' {
 
 		dropPlaceholder: (Self.GanttChart.DropPlaceholder | null);
 
+		onResourceClick: (Self.GanttChart.ResourceClickCallback | null);
+
+		onResourceDoubleClick: (Self.GanttChart.ResourceClickCallback | null);
+
 		onTaskClick: (Self.GanttChart.TaskClickCallback | null);
 
 		onTaskDoubleClick: (Self.GanttChart.TaskClickCallback | null);
@@ -6388,6 +6428,8 @@ declare module '@uif-js/component' {
 			resourceTimeRanges?: globalThis.Array<Self.GanttChart.ResourceTimeRange>;
 
 			resourceTimeRangeContent?: Self.GanttChart.ResourceTimeRangeContentCallback;
+
+			resourceStyle?: (string | PackageCore.Style | object | Self.GanttChart.ResourceStyleCallback);
 
 			taskResize?: boolean;
 
@@ -6459,6 +6501,10 @@ declare module '@uif-js/component' {
 
 			dragTaskPosition?: Self.GanttChart.DragTaskPositionCallback;
 
+			onResourceClick?: Self.GanttChart.ResourceClickCallback;
+
+			onResourceDoubleClick?: Self.GanttChart.ResourceClickCallback;
+
 			onTaskClick?: Self.GanttChart.TaskClickCallback;
 
 			onTaskDoubleClick?: Self.GanttChart.TaskClickCallback;
@@ -6508,6 +6554,8 @@ declare module '@uif-js/component' {
 			height?: number;
 
 			taskColor?: (Self.GanttChart.TaskColor | Self.GanttChart.TaskCustomColor | PackageCore.Color);
+
+			style?: (string | PackageCore.Style | object);
 
 			calendar?: Self.GanttChart.Id;
 
@@ -6671,6 +6719,15 @@ declare module '@uif-js/component' {
 
 		}
 
+		type ResourceClickCallback = (args: Self.GanttChart.ResourceClickCallbackArgs) => (boolean | void);
+
+		interface ResourceClickCallbackArgs {
+			column: Self.GanttChart.ColumnDefinition;
+
+			resource: Self.GanttChart.ResourceDefinition;
+
+		}
+
 		type TaskClickCallback = (args: Self.GanttChart.TaskClickCallbackArgs) => (boolean | void);
 
 		interface TaskClickCallbackArgs {
@@ -6707,6 +6764,15 @@ declare module '@uif-js/component' {
 
 		interface TaskStyleCallbackArgs {
 			task: Self.GanttChart.TaskDefinition;
+
+			resource: Self.GanttChart.ResourceDefinition;
+
+		}
+
+		type ResourceStyleCallback = (args: Self.GanttChart.ResourceStyleCallbackArgs) => (string | PackageCore.Style | object | null);
+
+		interface ResourceStyleCallbackArgs {
+			column: Self.GanttChart.ColumnDefinition;
 
 			resource: Self.GanttChart.ResourceDefinition;
 
@@ -8572,6 +8638,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface JsxItemProps extends Self.GridPanel.BaseItemProps {
+			children?: PackageCore.VDom.Children;
+
 			key?: any;
 
 		}
@@ -8615,6 +8683,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			areas?: globalThis.Array<(Self.GridPanelArea | Self.GridPanelArea.Options)>;
 
 			autoFlow?: AutoFlow;
@@ -9322,6 +9392,8 @@ declare module '@uif-js/component' {
 
 	export namespace Group {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: PackageCore.Component;
 
 			role?: Self.Group.Role;
@@ -9362,6 +9434,8 @@ declare module '@uif-js/component' {
 
 	export namespace GrowlMessage {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			title?: (string | PackageCore.Translation);
 
 			content?: (string | PackageCore.Translation | PackageCore.Component | PackageCore.JSX.Element);
@@ -9482,6 +9556,8 @@ declare module '@uif-js/component' {
 		type Content = (null | string | number | PackageCore.Component | PackageCore.JSX.Element | PackageCore.Translation);
 
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: Self.Heading.Content;
 
 			inline?: boolean;
@@ -9974,6 +10050,8 @@ declare module '@uif-js/component' {
 
 	export namespace Label {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			clickHandler?: Self.Label.ClickHandler;
 
 			for?: (string | PackageCore.VDomRef | PackageCore.Component);
@@ -10028,6 +10106,8 @@ declare module '@uif-js/component' {
 
 	export namespace LazyPanel {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: (Self.LazyPanel.ContentProvider | PackageCore.Component | PackageCore.JSX.Element);
 
 			decorator?: PackageCore.Decorator;
@@ -10189,6 +10269,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: (string | number | PackageCore.Translation | PackageCore.Component | null);
 
 			target?: Self.Link.Target;
@@ -10282,12 +10364,14 @@ declare module '@uif-js/component' {
 
 		static Definition(props: Self.List.Options): PackageCore.JSX.Element;
 
-		static Item(classList?: (string | PackageCore.Style | globalThis.Array<(string | PackageCore.Style)>), rootStyle?: Record<string, string>, rootAttributes?: Record<string, string>): PackageCore.JSX.Element;
+		static Item(children?: PackageCore.VDom.Children, classList?: (string | PackageCore.Style | globalThis.Array<(string | PackageCore.Style)>), rootStyle?: Record<string, string>, rootAttributes?: Record<string, string>, type?: Self.List.Type): PackageCore.JSX.Element;
 
 	}
 
 	export namespace List {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			items?: (globalThis.Array<any> | null);
 
 			type?: Self.List.Type;
@@ -11126,7 +11210,7 @@ declare module '@uif-js/component' {
 
 			totalItemsCount?: number;
 
-			emptyStateMessage?: (string | PackageCore.Component | PackageCore.JSX.Element);
+			emptyStateMessage?: (string | PackageCore.Translation | PackageCore.Component | PackageCore.JSX.Element);
 
 			itemReorder?: boolean;
 
@@ -11767,6 +11851,8 @@ declare module '@uif-js/component' {
 
 	export namespace Menu {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			items?: globalThis.Array<Self.MenuItem.ItemDefinition>;
 
 			circularSelection?: boolean;
@@ -11823,6 +11909,8 @@ declare module '@uif-js/component' {
 
 	export namespace MenuBar {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			items: globalThis.Array<Self.MenuItem>;
 
 			menu: Self.Menu.Options;
@@ -11865,6 +11953,8 @@ declare module '@uif-js/component' {
 
 	export namespace MenuButton {
 		interface Options extends Self.Button.Options {
+			children?: PackageCore.VDom.Children;
+
 			menu: (globalThis.Array<Self.MenuItem.ItemDefinition> | Self.Menu.Options);
 
 			openOnHover?: boolean;
@@ -11913,6 +12003,8 @@ declare module '@uif-js/component' {
 
 	export namespace MenuGroup {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			items?: globalThis.Array<PackageCore.Component>;
 
 			label?: (string | PackageCore.Translation);
@@ -11946,6 +12038,8 @@ declare module '@uif-js/component' {
 
 	export namespace MenuItem {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content: PackageCore.Component;
 
 			highlighted?: boolean;
@@ -11957,6 +12051,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface BaseItemDefinition {
+			children?: PackageCore.VDom.Children;
+
 			items?: globalThis.Array<Self.MenuItem.ItemDefinition>;
 
 			highlighted?: boolean;
@@ -12402,6 +12498,8 @@ declare module '@uif-js/component' {
 
 	export namespace Metric {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			title: (string | number | PackageCore.Translation);
 
 			metric: (string | number | PackageCore.Translation);
@@ -12933,6 +13031,8 @@ declare module '@uif-js/component' {
 
 	export namespace NavigationDrawer {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			collapsed?: boolean;
 
 			collapsible?: boolean;
@@ -13096,6 +13196,8 @@ declare module '@uif-js/component' {
 
 	export namespace NavigationDrawerItem {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			value?: any;
 
 			action?: () => void;
@@ -13626,6 +13728,8 @@ declare module '@uif-js/component' {
 
 	export namespace Paragraph {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: (null | string | PackageCore.Translation | PackageCore.Component | globalThis.Array<(string | PackageCore.Translation | PackageCore.Component)>);
 
 			textAlignment?: Self.Paragraph.TextAlignment;
@@ -13766,6 +13870,8 @@ declare module '@uif-js/component' {
 
 	export namespace Placeholder {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			text: string;
 
 		}
@@ -13860,6 +13966,8 @@ declare module '@uif-js/component' {
 
 	export namespace Portlet {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			title?: (string | number | PackageCore.Translation);
 
 			description?: (string | number | PackageCore.Translation);
@@ -14050,6 +14158,8 @@ declare module '@uif-js/component' {
 
 	export namespace RadioButtonGroup {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			columns?: (number | string | globalThis.Array<string>);
 
 			rows?: (number | string | globalThis.Array<string>);
@@ -14489,10 +14599,14 @@ declare module '@uif-js/component' {
 
 		static Event: Self.ResponsivePanel.EventTypes;
 
+		static Item(props?: {children?: PackageCore.VDom.Children}): PackageCore.JSX.Element;
+
 	}
 
 	export namespace ResponsivePanel {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: (PackageCore.Component | PackageCore.JSX.Element);
 
 			widthBreakpoints?: Record<string, number>;
@@ -14597,7 +14711,7 @@ declare module '@uif-js/component' {
 
 			resizable?: boolean;
 
-			resizeDirection?: boolean;
+			resizeDirection?: Self.RichTextEditor.ResizeDirection;
 
 			defaultFontFamily?: string;
 
@@ -14752,6 +14866,8 @@ declare module '@uif-js/component' {
 
 	export namespace ScrollPanel {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			allowWheelPassThrough?: boolean;
 
 			content?: (PackageCore.Component | PackageCore.JSX.Element);
@@ -14850,6 +14966,8 @@ declare module '@uif-js/component' {
 
 	export namespace ScrollTabList {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			position?: Self.ScrollTabList.Position;
 
 			stripePosition?: Self.ScrollTabList.StripePosition;
@@ -15794,6 +15912,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			selectedRange?: globalThis.Array<(string | number | Self.SliderRange.Item)>;
 
 			items?: (Self.SliderRange.ValuesObject | globalThis.Array<any>);
@@ -16140,6 +16260,8 @@ declare module '@uif-js/component' {
 
 	export namespace SplitPanel {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			items?: globalThis.Array<Self.SplitPanel.ItemConfiguration>;
 
 			orientation?: Self.SplitPanel.Orientation;
@@ -16184,6 +16306,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface JsxItemProps extends Self.SplitPanel.BaseItemProps {
+			children?: PackageCore.VDom.Children;
+
 			key?: any;
 
 		}
@@ -16247,6 +16371,8 @@ declare module '@uif-js/component' {
 
 	export namespace SplitPanelItem {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			collapse?: Self.SplitPanel.ItemCollapse;
 
 			component: PackageCore.Component;
@@ -16409,6 +16535,8 @@ declare module '@uif-js/component' {
 
 	export namespace StackPanel {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			alignment?: Self.StackPanel.Alignment;
 
 			decorator?: PackageCore.Decorator;
@@ -16461,6 +16589,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface JsxItemProps extends Self.StackPanel.BaseItemProps {
+			children?: PackageCore.VDom.Children;
+
 			key?: any;
 
 		}
@@ -16695,8 +16825,6 @@ declare module '@uif-js/component' {
 
 		static Vertical(props: Self.Stepper.Options): PackageCore.JSX.Element;
 
-		static Item: Self.StepperItem;
-
 		static Event: Self.Stepper.EventTypes;
 
 		static defaultLabelGenerator(index: number, props: object): (PackageCore.JSX.Element | string);
@@ -16707,6 +16835,8 @@ declare module '@uif-js/component' {
 
 	export namespace Stepper {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			orientation?: Self.Stepper.Orientation;
 
 			descriptionPosition?: Self.Stepper.DescriptionPosition;
@@ -16744,6 +16874,8 @@ declare module '@uif-js/component' {
 			STEP_DEACTIVATED: string;
 
 		}
+
+		export import Item = Self.StepperItem;
 
 		export import Orientation = Self.StepperItem.Orientation;
 
@@ -16800,6 +16932,8 @@ declare module '@uif-js/component' {
 
 	export namespace StepperItem {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			label?: (string | number | PackageCore.Translation | PackageCore.Component | PackageCore.JSX.Element);
 
 			orientation?: Self.StepperItem.Orientation;
@@ -16904,6 +17038,8 @@ declare module '@uif-js/component' {
 
 	export namespace SummaryBox {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			collapsed?: boolean;
 
 			collapsible?: boolean;
@@ -17361,6 +17497,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface JsxItemProps extends Self.TabPanel.BaseItemProps {
+			children?: PackageCore.VDom.Children;
+
 			key?: any;
 
 			ref?: PackageCore.VDomRef;
@@ -17383,6 +17521,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			hierarchy?: Self.TabPanel.Hierarchy;
 
 			items?: (Self.TabPanel.ItemConfiguration | globalThis.Array<Self.TabPanel.ItemConfiguration>);
@@ -17620,6 +17760,8 @@ declare module '@uif-js/component' {
 
 	export namespace Table {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			body?: (globalThis.Array<globalThis.Array<any>> | null);
 
 			caption?: (string | Self.Text | null);
@@ -17721,6 +17863,8 @@ declare module '@uif-js/component' {
 		}
 
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			decorator?: PackageCore.Decorator;
 
 			text?: (string | number | PackageCore.Translation);
@@ -18873,6 +19017,8 @@ declare module '@uif-js/component' {
 		type Value = (string | number | symbol);
 
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			buttons?: globalThis.Array<Self.ToggleGroup.Button>;
 
 			defaultButtonOptions?: Self.ToggleGroup.Button;
@@ -18984,6 +19130,8 @@ declare module '@uif-js/component' {
 
 	export namespace ToolBar {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			items?: globalThis.Array<PackageCore.Component>;
 
 			orientation?: Self.ToolBar.Orientation;
@@ -19048,6 +19196,8 @@ declare module '@uif-js/component' {
 
 	export namespace ToolBarGroup {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			items?: globalThis.Array<PackageCore.Component>;
 
 		}
@@ -19144,7 +19294,7 @@ declare module '@uif-js/component' {
 
 			size?: Self.Tooltip.Size;
 
-			visualStyle?: string;
+			visualStyle?: Self.Tooltip.VisualStyle;
 
 			anchorStyle?: Self.Window.AnchorVisualStyleCallback;
 
@@ -20212,6 +20362,8 @@ declare module '@uif-js/component' {
 
 	namespace WindowBody {
 		interface Options extends PackageCore.Component.Options {
+			children?: PackageCore.VDom.Children;
+
 			content?: (string | PackageCore.Translation | PackageCore.Component);
 
 			icon?: Self.Image.Source;
