@@ -45,7 +45,7 @@
 				"mandatory": false,
 				"type": "FLAG",
 				"defaultOption": false,
-				"disableInIntegrationMode": false
+				"disableInIntegrationMode": true
 			},
 			"calledfromupdate": {
 				"name": "calledfromupdate",
@@ -54,7 +54,7 @@
 				"mandatory": false,
 				"type": "FLAG",
 				"defaultOption": false,
-				"disableInIntegrationMode": false
+				"disableInIntegrationMode": true
 			}
 		}
 	},
