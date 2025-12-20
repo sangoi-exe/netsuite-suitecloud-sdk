@@ -22,9 +22,7 @@
 	},
 	"main": "./src/suitecloud.js",
 	"preferGlobal": true,
-	"sdkFilename": "cli-2025.1.0.jar",
 	"nsCompatibleVersion": "2025.2",
-	"sdkDownloadUrl": "https://system.netsuite.com/download/suitecloud-sdk/25.1",
 	"bin": {
 		"suitecloud": "src/suitecloud.js"
 	},
@@ -39,7 +37,6 @@
 		"jest": "29.7.0"
 	},
 	"scripts": {
-		"test": "jest",
-		"postinstall": "node postinstall.js"
+		"test": "jest"
 	}
 }

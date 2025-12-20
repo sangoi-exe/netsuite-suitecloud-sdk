@@ -11,7 +11,7 @@ const CommandActionExecutor = require('./core/CommandActionExecutor');
 const CommandRegistrationService = require('./core/CommandRegistrationService');
 const CommandOptionsValidator = require('./core/CommandOptionsValidator');
 const CLIConfigurationService = require('./core/extensibility/CLIConfigurationService');
-const sdkPath = require('./core/sdksetup/SdkProperties').getSdkPath();
+const sdkPath = require('./services/SdkHomeService').getSdkHomePath();
 const NodeConsoleLogger = require('./loggers/NodeConsoleLogger');
 
 const executionPath = process.cwd();
