@@ -36,7 +36,7 @@ const ANSWER_NAMES = {
     PARENT_PATH: 'parentPath',
     TYPE: 'type',
 };
-const SUITEAPPS_PATH = '/SuiteApps';
+const SUITEAPPS_PATH = 'SuiteApps';
 const SUITESCRIPTS_PATH = '/SuiteScripts';
 const WEB_HOSTING_SUBFOLDER_PATH = '/Web Site Hosting Files/.*/';
 
@@ -129,7 +129,8 @@ module.exports = class CreateFileInputHandler extends BaseInputHandler {
     }
 
     _questionEnterName(parentRelativePath) {
-        const parentAbsolutePath = path.join(this._projectFolder, ApplicationConstants.FOLDERS.FILE_CABINET, parentRelativePath);
+        const safeParentRelativePath = `${parentRelativePath}`.replace(/^[\\/]+/, '');
+        const parentAbsolutePath = path.join(this._projectFolder, ApplicationConstants.FOLDERS.FILE_CABINET, safeParentRelativePath);
 
         return {
             type: CommandUtils.INQUIRER_TYPES.INPUT,
@@ -155,7 +156,7 @@ module.exports = class CreateFileInputHandler extends BaseInputHandler {
                 folderRestricted = !(folderRelativePath.startsWith(SUITESCRIPTS_PATH) || folderRelativePath.match(WEB_HOSTING_SUBFOLDER_PATH));
             } else {
                 const applicationId = this._projectInfoService.getApplicationId();
-                const applicationSuiteAppFolderAbsolutePath = path.join(this._projectFolder, FOLDERS.FILE_CABINET, SUITEAPPS_PATH, '/', applicationId, '/');
+                const applicationSuiteAppFolderAbsolutePath = path.join(this._projectFolder, FOLDERS.FILE_CABINET, SUITEAPPS_PATH, applicationId);
                 const applicationSuiteAppFolderRelativePath = this._fileCabinetService.getFileCabinetRelativePath(applicationSuiteAppFolderAbsolutePath);
                 folderRestricted = !folderRelativePath.startsWith(applicationSuiteAppFolderRelativePath);
             }

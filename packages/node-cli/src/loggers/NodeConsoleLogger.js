@@ -6,40 +6,43 @@
 
 const ConsoleLogger = require('./ConsoleLogger');
 
-const loadLoggerFontFormatter = async () => {
-	const { COLORS, BOLD } = await import('./LoggerFontFormatter.mjs');
-	return { COLORS, BOLD };
-};
-const fontFormatterPromise = loadLoggerFontFormatter();
+let fontFormatter = null;
+let fontFormatterLoadError = null;
+(async () => {
+	try {
+		fontFormatter = await import('./LoggerFontFormatter.mjs');
+	} catch (error) {
+		fontFormatterLoadError = error;
+	}
+})();
+
+function colorize(colorKey, message) {
+	if (!fontFormatter || !fontFormatter.COLORS || !fontFormatter.COLORS[colorKey]) {
+		return `${message}`;
+	}
+	return fontFormatter.COLORS[colorKey](`${message}`);
+}
 
 class NodeConsoleLogger extends ConsoleLogger {
 
 	info(message) {
-		return fontFormatterPromise.then(({ COLORS: { INFO } }) => {
-			this._println(message, INFO);
-		});
+		this._println(colorize('INFO', message));
 	}
 
 	result(message) {
-		return fontFormatterPromise.then(({ COLORS: { RESULT } }) => {
-			this._println(message, RESULT);
-		});
+		this._println(colorize('RESULT', message));
 	}
 
 	warning(message) {
-		return fontFormatterPromise.then(({ COLORS: { WARNING } }) => {
-			this._println(message, WARNING);
-		});
+		this._println(colorize('WARNING', message));
 	}
 
 	error(message) {
-		return fontFormatterPromise.then(({ COLORS: { ERROR } }) => {
-			this._println(message, ERROR);
-		});
+		this._println(colorize('ERROR', message));
 	}
 
-	_println(message, color) {
-		console.log(color(message));
+	_println(message) {
+		console.log(message);
 	}
 
 }

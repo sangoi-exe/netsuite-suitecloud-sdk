@@ -9,6 +9,7 @@ const assert = require('assert');
 const program = require('commander');
 const NodeConsoleLogger = require('./loggers/NodeConsoleLogger');
 const NodeTranslationService = require('./services/NodeTranslationService');
+const DiagnosticsService = require('./services/DiagnosticsService');
 const {
 	CLI: { INTERACTIVE_OPTION_DESCRIPTION, TITLE, USAGE, VERSION_HELP },
 	COMMAND_OPTIONS,
@@ -28,6 +29,8 @@ const HELP_COMMAND = 'help';
 const HELP_OPTION = '--help';
 const HELP_ALIAS = '-h';
 const VERSION_OPTION = '--version';
+const DEBUG_OPTION = '--debug';
+const VERBOSE_OPTION = '--verbose';
 
 module.exports = class CLI {
 	constructor(dependencies) {
@@ -43,6 +46,16 @@ module.exports = class CLI {
 
 	start(process) {
 		try {
+			this._applyGlobalFlags(process.argv);
+
+			if (DiagnosticsService.isDebugEnabled()) {
+				const SdkHomeService = require('./services/SdkHomeService');
+				NodeConsoleLogger.info(
+					`Debug enabled: node=${global.process.version} platform=${global.process.platform}/${global.process.arch} ` +
+						`sdkHome=${SdkHomeService.getSdkHomePath()} cwd=${process.cwd()}`
+				);
+			}
+
 			const commandMetadataList = this._commandsMetadataService.getCommandsMetadata();
 
 			const thirdArgument = process.argv[2];
@@ -72,6 +85,8 @@ module.exports = class CLI {
 
 			program
 				.version(CLI_VERSION, VERSION_OPTION, NodeTranslationService.getMessage(VERSION_HELP))
+				.option(DEBUG_OPTION, 'Print debug output (stack traces, raw SDK output, timings).')
+				.option(VERBOSE_OPTION, 'Print verbose output (command timings).')
 				.option(
 					`${INTERACTIVE_ALIAS}, ${INTERACTIVE_OPTION}`,
 					NodeTranslationService.getMessage(INTERACTIVE_OPTION_DESCRIPTION),
@@ -86,6 +101,31 @@ module.exports = class CLI {
 				.parse(process.argv);
 		} catch (exception) {
 			NodeConsoleLogger.error(unwrapExceptionMessage(exception));
+		}
+	}
+
+	_applyGlobalFlags(argv) {
+		// Commander requires global options before the command; we allow them anywhere by
+		// translating flags into env vars and removing them from argv.
+		if (!Array.isArray(argv)) {
+			return;
+		}
+
+		const hasFlag = (flag) => argv.includes(flag);
+		const removeFlag = (flag) => {
+			while (argv.includes(flag)) {
+				argv.splice(argv.indexOf(flag), 1);
+			}
+		};
+
+		if (hasFlag(DEBUG_OPTION)) {
+			process.env.SUITECLOUD_DEBUG = '1';
+			removeFlag(DEBUG_OPTION);
+		}
+
+		if (hasFlag(VERBOSE_OPTION)) {
+			process.env.SUITECLOUD_VERBOSE = '1';
+			removeFlag(VERBOSE_OPTION);
 		}
 	}
 
