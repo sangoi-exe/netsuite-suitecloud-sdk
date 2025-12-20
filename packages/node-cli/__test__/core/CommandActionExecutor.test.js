@@ -1,6 +1,6 @@
 'use strict';
 const CommandActionExecutor = require('../../src/core/CommandActionExecutor');
-const sdkPath = require('../../src/core/sdksetup/SdkProperties').getSdkPath();
+const sdkPath = require('../../src/services/SdkHomeService').getSdkHomePath();
 const { ActionResult } = require('../../src/services/actionresult/ActionResult');
 
 describe('CommandActionExecutor ExecuteAction():', function() {

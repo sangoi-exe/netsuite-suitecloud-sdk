@@ -109,7 +109,7 @@ module.exports = class ProjectInfoService {
 		let projectId;
 		let validationError;
 
-		let parser = new xml2js.Parser({ validator: this._validateXml });
+		let parser = new xml2js.Parser({ validator: this._validateXml, explicitArray: false, trim: true });
 
 		parser.parseString(manifestString, function (err, result) {
 			if (err) {

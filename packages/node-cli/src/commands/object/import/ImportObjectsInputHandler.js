@@ -242,7 +242,7 @@ module.exports = class ImportObjectsInputHandler extends BaseInputHandler {
 		}
 
 		// extracting root prefix
-		// replacing '\' for '/', this is done because destinationfolder option in java-sdf works only with '/'
+		// replacing '\' for '/', because the destinationfolder option only works with '/'
 		// sourroundig "" to the folder string so it will handle blank spaces case
 		const transformFoldersToChoicesFunc = (folder) => ({
 			name: folder.replace(this._projectFolder, '').replace(/\\/g, '/'),

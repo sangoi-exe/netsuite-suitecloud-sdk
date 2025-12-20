@@ -1,0 +1,5 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <publisherid>com.example</publisherid>
+  <projectid>exampleproj</projectid>
+  <projectname>Example Project</projectname>
+</manifest>

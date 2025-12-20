@@ -39,10 +39,14 @@ module.exports = class ValidateAction extends BaseAction {
 
 	preExecute(params) {
 		params[COMMAND_OPTIONS.PROJECT] = CommandUtils.quoteString(this._projectFolder);
-		params[COMMAND_OPTIONS.AUTH_ID] = getProjectDefaultAuthId(this._executionPath);
 
 		AccountSpecificValuesUtils.validate(params, this._projectFolder);
 		ApplyInstallationPreferencesUtils.validate(params, this._projectFolder, this._commandMetadata.name, this._log);
+
+		// Local validation is java-free and does not require auth; server validation will.
+		if (params[COMMAND_OPTIONS.SERVER]) {
+			params[COMMAND_OPTIONS.AUTH_ID] = getProjectDefaultAuthId(this._executionPath);
+		}
 
 		return {
 			...params,
@@ -78,7 +82,9 @@ module.exports = class ValidateAction extends BaseAction {
 
 			const operationResult = await executeWithSpinner({
 				action: this._sdkExecutor.execute(executionContext),
-				message: NodeTranslationService.getMessage(MESSAGES.VALIDATING, this._projectName, getProjectDefaultAuthId(this._executionPath)),
+				message: isServerValidation
+					? NodeTranslationService.getMessage(MESSAGES.VALIDATING, this._projectName, getProjectDefaultAuthId(this._executionPath))
+					: `Validating project "${this._projectName}" (local)`,
 			});
 
 			return operationResult.status === SdkOperationResultUtils.STATUS.SUCCESS

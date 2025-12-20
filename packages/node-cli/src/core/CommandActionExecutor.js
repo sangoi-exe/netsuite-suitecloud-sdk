@@ -15,6 +15,7 @@ const { getProjectDefaultAuthId } = require('../utils/AuthenticationUtils');
 const ExecutionEnvironmentContext = require('../ExecutionEnvironmentContext');
 const { checkIfReauthorizationIsNeeded, refreshAuthorization } = require('../utils/AuthenticationUtils');
 const { AUTHORIZATION_PROPERTIES_KEYS } = require('../ApplicationConstants');
+const DiagnosticsService = require('../services/DiagnosticsService');
 
 module.exports = class CommandActionExecutor {
 	constructor(dependencies) {
@@ -43,6 +44,7 @@ module.exports = class CommandActionExecutor {
 		assert(context.commandName);
 		assert(typeof context.runInInteractiveMode === 'boolean');
 
+		const startedAt = Date.now();
 		let commandUserExtension;
 		try {
 			const commandName = context.commandName;
@@ -54,6 +56,10 @@ module.exports = class CommandActionExecutor {
 			const defaultAuthId = commandMetadata.isSetupRequired ? getProjectDefaultAuthId(this._executionPath) : null;
 
 			this._checkCanExecuteCommand({ runInInteractiveMode, commandMetadata, defaultAuthId });
+
+			if (DiagnosticsService.isVerboseEnabled()) {
+				await this._log.info(`Running "${commandName}"...`);
+			}
 
 			const commandArguments = this._extractOptionValuesFromArguments(commandMetadata.options, context.arguments);
 			
@@ -92,13 +98,23 @@ module.exports = class CommandActionExecutor {
 				// run onError(error) from suitecloud.config.js
 				commandUserExtension.onError(ActionResultUtils.getErrorMessagesString(actionResult));
 			}
+
+			if (DiagnosticsService.isVerboseEnabled()) {
+				await this._log.info(`Finished "${commandName}" in ${DiagnosticsService.formatDuration(Date.now() - startedAt)}.`);
+			}
 			return actionResult;
 
 		} catch (error) {
-			let errorMessage = this._logGenericError(error);
+			let errorMessage = this._logGenericError(error, {
+				commandName: context.commandName,
+				startedAt,
+			});
 			if (commandUserExtension && commandUserExtension.onError) {
 				// run onError(error) from suitecloud.config.js
 				commandUserExtension.onError(error);
+			}
+			if (DiagnosticsService.isVerboseEnabled()) {
+				await this._log.info(`Failed "${context.commandName}" after ${DiagnosticsService.formatDuration(Date.now() - startedAt)}.`);
 			}
 			return ActionResult.Builder.withErrors(Array.isArray(errorMessage) ? errorMessage : [errorMessage]).build();
 		}
@@ -122,10 +138,31 @@ module.exports = class CommandActionExecutor {
 		}
 	}
 
-	_logGenericError(error) {
+	_logGenericError(error, context) {
+		const debugEnabled = DiagnosticsService.isDebugEnabled();
+		const commandName = context && context.commandName ? context.commandName : null;
+
 		let errorMessage = unwrapExceptionMessage(error);
-		this._log.error(errorMessage);
-		const informativeMessage = unwrapInformationMessage(error);
+		if (Array.isArray(errorMessage)) {
+			errorMessage = errorMessage.join(lineBreak);
+		} else if (errorMessage && typeof errorMessage === 'object' && errorMessage.message) {
+			errorMessage = errorMessage.message;
+		} else {
+			errorMessage = `${errorMessage}`;
+		}
+
+		if (commandName) {
+			this._log.error(`[${commandName}] ${errorMessage}`);
+		} else {
+			this._log.error(errorMessage);
+		}
+
+		let informativeMessage = unwrapInformationMessage(error);
+		if (debugEnabled && error && error.stack) {
+			informativeMessage = `${informativeMessage ? informativeMessage + lineBreak : ''}${error.stack}`;
+		} else if (!debugEnabled && error && error.stack) {
+			informativeMessage = `${informativeMessage ? informativeMessage + lineBreak : ''}Tip: re-run with --debug to see a stack trace.`;
+		}
 
 		if (informativeMessage) {
 			this._log.info(`${lineBreak}${informativeMessage}`);

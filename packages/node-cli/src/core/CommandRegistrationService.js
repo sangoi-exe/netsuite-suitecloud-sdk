@@ -23,6 +23,18 @@ const EXIT_CODE = {
 	ERROR: 1,
 };
 
+function shouldFailProcessExitCode(commandName, actionResult) {
+	// For local validation we want to print structured output and still fail CI when errors are present.
+	if (commandName === 'project:validate' && actionResult && actionResult.isSuccess && actionResult.isSuccess()) {
+		if (actionResult.isServerValidation) {
+			return false;
+		}
+		const data = actionResult.data;
+		return !!(data && Array.isArray(data.errors) && data.errors.length > 0);
+	}
+	return false;
+}
+
 module.exports = class CommandRegistrationService {
 	register(options) {
 		assert(options);
@@ -56,7 +68,7 @@ module.exports = class CommandRegistrationService {
 
 		commandSetup.description(commandMetadata.description).action(async (options) => {
 			const actionResult = await executeCommandFunction(options);
-			process.exitCode = actionResult.isSuccess() ? EXIT_CODE.SUCCESS : EXIT_CODE.ERROR;
+			process.exitCode = actionResult.isSuccess() && !shouldFailProcessExitCode(commandMetadata.name, actionResult) ? EXIT_CODE.SUCCESS : EXIT_CODE.ERROR;
 		});
 	}
 

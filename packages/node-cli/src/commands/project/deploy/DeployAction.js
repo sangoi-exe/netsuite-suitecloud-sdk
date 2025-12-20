@@ -19,7 +19,7 @@ const { getProjectDefaultAuthId } = require('../../../utils/AuthenticationUtils'
 
 const { PROJECT_SUITEAPP } = require('../../../ApplicationConstants');
 
-const { COMMAND_DEPLOY } = require('../../../services/TranslationKeys');
+const { COMMAND_DEPLOY, ERRORS } = require('../../../services/TranslationKeys');
 
 const COMMAND = {
 	OPTIONS: {
@@ -53,10 +53,14 @@ module.exports = class DeployAction extends (
 		AccountSpecificValuesUtils.validate(params, this._projectFolder);
 		ApplyInstallationPreferencesUtils.validate(params, this._projectFolder, this._commandMetadata.name, this._log);
 
+		// Preview is local and does not require auth. Deploy/validate will.
+		if (!params[COMMAND.FLAGS.PREVIEW]) {
+			params[COMMAND.OPTIONS.AUTH_ID] = getProjectDefaultAuthId(this._executionPath);
+		}
+
 		return {
 			...params,
 			[COMMAND.OPTIONS.PROJECT]: CommandUtils.quoteString(this._projectFolder),
-			[COMMAND.OPTIONS.AUTH_ID]: getProjectDefaultAuthId(this._executionPath),
 			...AccountSpecificValuesUtils.transformArgument(params),
 		};
 	}
@@ -64,6 +68,10 @@ module.exports = class DeployAction extends (
 	async execute(params) {
 		try {
 			let flags = [COMMAND.FLAGS.NO_PREVIEW, COMMAND.FLAGS.SKIP_WARNING];
+
+			if (!params[COMMAND.FLAGS.PREVIEW] && !params[COMMAND.OPTIONS.AUTH_ID]) {
+				throw NodeTranslationService.getMessage(ERRORS.SETUP_REQUIRED);
+			}
 
 			if (params[COMMAND.FLAGS.VALIDATE]) {
 				delete params[COMMAND.FLAGS.VALIDATE];
@@ -109,7 +117,7 @@ module.exports = class DeployAction extends (
 				message: NodeTranslationService.getMessage(
 					COMMAND_DEPLOY.MESSAGES.PREVIEWING,
 					this._projectName,
-					getProjectDefaultAuthId(this._executionPath),
+					params[COMMAND.OPTIONS.AUTH_ID] || 'local',
 				),
 			});
 
@@ -136,7 +144,7 @@ module.exports = class DeployAction extends (
 				message: NodeTranslationService.getMessage(
 					COMMAND_DEPLOY.MESSAGES.DEPLOYING,
 					this._projectName,
-					getProjectDefaultAuthId(this._executionPath),
+					params[COMMAND.OPTIONS.AUTH_ID],
 				),
 			});
 

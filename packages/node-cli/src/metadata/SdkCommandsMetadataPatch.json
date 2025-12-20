@@ -21,6 +21,26 @@
 	"account:setup:ci": {
 		"description": "Sets up an account to use with SuiteCloud SDK and configures the default auth ID for the SuiteCloud project. This command does not require browser-based login to NetSuite.\nTo change the default auth ID for the project, run: suitecloud account:setup.",
 		"options": {
+			"clientid": {
+				"name": "clientid",
+				"option": "clientid",
+				"description": "References the OAuth2 client ID (Integration record). If omitted, set SUITECLOUD_CLIENT_ID env var.",
+				"mandatory": false,
+				"type": "SINGLE",
+				"usage": "",
+				"defaultOption": false,
+				"disableInIntegrationMode": false
+			},
+			"scope": {
+				"name": "scope",
+				"option": "scope",
+				"description": "OAuth2 scopes requested for client_credentials (space-separated). For server deploy/validate, include restlets (example: \"rest_webservices restlets\").",
+				"mandatory": false,
+				"type": "SINGLE",
+				"usage": "\"rest_webservices restlets\"",
+				"defaultOption": false,
+				"disableInIntegrationMode": false
+			},
 			"domain": {
 				"name": "domain",
 				"option": "domain",
@@ -82,7 +102,11 @@
 		}
 	},
 	"project:deploy": {
+		"isSetupRequired": false,
 		"options": {
+			"authid": {
+				"mandatory": false
+			},
 			"dryrun": {
 				"name": "dryrun",
 				"option": "dryrun",
@@ -99,7 +123,11 @@
 		}
 	},
 	"project:validate": {
+		"isSetupRequired": false,
 		"options": {
+			"authid": {
+				"mandatory": false
+			},
 			"applyinstallprefs": {
 				"alias": "a"
 			}

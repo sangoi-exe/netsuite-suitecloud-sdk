@@ -43,7 +43,9 @@ const COMMANDS = {
 			ACCOUNT: 'account',
 			AUTH_ID: 'authid',
 			CERTIFICATEID: 'certificateid',
+			CLIENTID: 'clientid',
 			PRIVATEKEYPATH: 'privatekeypath',
+			SCOPE: 'scope',
 			URL: 'url',
 		}
 	},
@@ -152,7 +154,15 @@ async function authenticateCi(params, sdkPath, projectFolder, executionEnvironme
 		.addParam(COMMANDS.AUTHENTICATE_CI.PARAMS.AUTH_ID, authId)
 		.addParam(COMMANDS.AUTHENTICATE_CI.PARAMS.ACCOUNT, params.account)
 		.addParam(COMMANDS.AUTHENTICATE_CI.PARAMS.CERTIFICATEID, params.certificateid)
-		.addParam(COMMANDS.AUTHENTICATE_CI.PARAMS.PRIVATEKEYPATH, params.privatekeypath)
+		.addParam(COMMANDS.AUTHENTICATE_CI.PARAMS.PRIVATEKEYPATH, params.privatekeypath);
+
+	if (params.clientid) {
+		contextBuilder.addParam(COMMANDS.AUTHENTICATE_CI.PARAMS.CLIENTID, params.clientid);
+	}
+
+	if (params.scope) {
+		contextBuilder.addParam(COMMANDS.AUTHENTICATE_CI.PARAMS.SCOPE, params.scope);
+	}
 
 	if (params.domain) {
 		contextBuilder.addParam(COMMANDS.AUTHENTICATE_CI.PARAMS.URL, params.domain);
