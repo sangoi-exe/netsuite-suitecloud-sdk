@@ -13,11 +13,7 @@ module.exports = {
 	SDK_COMMANDS_METADATA_PATCH_FILE: 'metadata/SdkCommandsMetadataPatch.json', //Overwrites selected properties in SdkCommandsMetadata.json file that are specific for SuiteCloud CLI for Node.js
 	NODE_COMMANDS_METADATA_FILE: 'metadata/NodeCommandsMetadata.json',
 	COMMAND_GENERATORS_METADATA_FILE: 'metadata/CommandGenerators.json',
-	SDK_COMPATIBLE_JAVA_VERSIONS: ['17', '21'],
-	SDK_INTEGRATION_MODE_JVM_OPTION: '-DintegrationMode --add-opens java.base/java.io=ALL-UNNAMED',
 	SDK_CLIENT_PLATFORM: 'SuiteCloudCLIforNode.js',
-	SDK_CLIENT_PLATFORM_JVM_OPTION: '-DclientPlatform',
-	SDK_CLIENT_PLATFORM_VERSION_JVM_OPTION: '-DclientPlatformVersion',
 	FILES: {
 		PROJECT_JSON: 'project.json',
 		HIDING_PREFERENCE: 'hiding.xml',
@@ -26,10 +22,10 @@ module.exports = {
 		SDK_SETTINGS: 'suitecloud-sdk-settings.json',
 	},
 	FOLDERS: {
-		FILE_CABINET: '/FileCabinet',
-		INSTALLATION_PREFERENCES: '/InstallationPreferences',
-		OBJECTS: '/Objects',
-		SUITEAPPS: '/SuiteApps',
+		FILE_CABINET: 'FileCabinet',
+		INSTALLATION_PREFERENCES: 'InstallationPreferences',
+		OBJECTS: 'Objects',
+		SUITEAPPS: 'SuiteApps',
 		SUITECLOUD_SDK: '.suitecloud-sdk',
 		NODE_CLI: 'cli',
 	},
