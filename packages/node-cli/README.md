@@ -14,7 +14,7 @@ CLI for Node.js is an interactive tool that guides you through all the steps of 
 ## Prerequisites
 The following software is required to work with SuiteCloud CLI for Node.js:
 - Node.js version 22 LTS
-- Oracle JDK version 17 or 21
+- Java is **not required** in this fork (java-free implementation in progress).
 
 Read the full list of prerequisites in [SuiteCloud CLI for Node.js Installation Prerequisites](https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_1558708810.html).
 
@@ -34,14 +34,56 @@ Since CLI for Node.js is a development tool, use a global instance to install it
 ```
 npm install -g @oracle/suitecloud-cli
 ```
-When installing SuiteCloud CLI for Node.js via script, for instance in a CI environment, you can skip showing the license presented during the normal installation process by adding the --acceptSuiteCloudSDKLicense flag to the install script as shown below. Note that by adding the mentioned flag to the script, you confirm that you have read and accepted the Oracle Free Use Terms and Conditions license. See the [License](#license) section for details.
-
-```
-npm install -g --acceptSuiteCloudSDKLicense @oracle/suitecloud-cli
-```
-
-
 CLI for Node.js is available from within any directory by running `suitecloud`.
+
+## Fork notes (java-free)
+This fork is migrating away from Oracle's Java-based SDK and is intended to run **without Java/JAR**.
+Currently implemented in the Node engine:
+- `account:setup:ci` (OAuth2 client_credentials; stores auth ID locally)
+- `account:manageauth` (list/info/rename/remove local auth IDs)
+- `project:create` (project skeleton + templates)
+- `project:package` (zip from `deploy.xml`)
+- `project:validate` (local validation of `deploy.xml` patterns; fails exit code when errors exist)
+- `project:deploy --dryrun` (local preview of entries included by `deploy.xml`)
+- `project:validate --server` (server validation via SuiteApp Dev Framework handlers; see notes below)
+- `project:deploy` (server deploy via SuiteApp Dev Framework handlers; see notes below)
+- `file:create` (SuiteScript skeleton + optional module injection)
+- `file:list` (lists File Cabinet folders/files via REST Query Service/SuiteQL)
+- `file:upload` (uploads local FileCabinet files via `filecabinetupload.nl`)
+- `file:import` (downloads File Cabinet files via `ide.nl` ImportFiles; writes under `FileCabinet/` and `.attributes/`)
+- `object:list` (lists SDF custom objects via `ide.nl` FetchCustomObjectList)
+- `object:import` (downloads SDF custom objects via `ide.nl` FetchCustomObjectXml; writes under `Objects/`)
+- `object:update` (overwrites existing SDF custom objects via `FetchCustomObjectXml` `mode=UPDATE`; for custom records, supports `includeinstances` via `fetchcustomrecordwithinstancesxml.nl`)
+
+Not implemented yet (still blocked on protocol parity / incomplete coverage):
+- `account:setup` (browser-based OAuth)
+
+Global flags:
+- `--debug`: prints stack traces and extra diagnostics on failures
+- `--verbose`: prints per-command timings
+
+Environment variables:
+- `SUITECLOUD_SDK_HOME`: overrides the SDK cache folder (default: `~/.suitecloud-sdk`)
+- `SUITECLOUD_CI_PASSKEY` / `SUITECLOUD_FALLBACK_PASSKEY`: encryption passkey for tokens stored in `$SUITECLOUD_SDK_HOME/auth/auth-store.json` (required for `account:setup:ci`)
+- `SUITECLOUD_CLIENT_ID`: OAuth2 client id (Integration record) used by `account:setup:ci` if `--clientid` is not provided
+- `SUITECLOUD_SCOPE` / `SUITECLOUD_SCOPES` / `NS_SCOPES`: OAuth2 scopes for `account:setup:ci` (default: `rest_webservices`). For server deploy/validate, include `restlets` (example: `"rest_webservices restlets"`).
+- `SUITECLOUD_PROXY`: proxy URL for outbound HTTP(S) requests
+- `SUITECLOUD_HTTP_TRACE`: logs sanitized HTTP request/response metadata to stderr (JSONL)
+- `SUITECLOUD_HTTP_TRACE_FILE`: writes HTTP traces to a file instead of stderr
+- `SUITECLOUD_HTTP_TRACE_BODY`: includes small request/response body snippets in traces (still sanitized; avoid using on sensitive flows)
+
+### Server deploy/validate (experimental)
+This fork runs `project:deploy` and `project:validate --server` via NetSuite SuiteApp Dev Framework handlers (`/app/suiteapp/devframework/ide*handler.nl`).
+If you observe `HTTP 200` with an empty body from these handlers, enable `SUITECLOUD_HTTP_TRACE=1` and re-run to capture a sanitized trace for debugging.
+
+### File import (experimental)
+This fork runs `file:import` via `POST /app/ide/ide.nl` (multipart `action=ImportFiles` + `files=<xml>`). The response is a ZIP containing `status.xml` and the requested files.
+If you see an HTML login response (“You must log in…”), your OAuth2 token likely lacks required scopes; include `restlets` (example: `--scope "rest_webservices restlets"`).
+
+### Object list/import/update (experimental)
+This fork runs `object:list`, `object:import` and `object:update` via `POST /app/ide/ide.nl` (multipart `action=FetchCustomObjectList|FetchCustomObjectXml`).
+For `object:update` custom records with `-includeinstances`, it also calls `POST /app/ide/fetchcustomrecordwithinstancesxml.nl` and extracts the returned zip into the project.
+If you see an HTML login response (“You must log in…”), your OAuth2 token likely lacks required scopes; include `restlets` (example: `--scope "rest_webservices restlets"`).
 
 ## Usage
 CLI for Node.js uses the following syntax: 
@@ -88,7 +130,7 @@ suitecloud project:create -i
 
 After you create a project, configure a NetSuite account, by running the following command within the project folder:
 ```
-suitecloud account:setup
+suitecloud account:setup:ci --account <ACCOUNT_ID> --authid <AUTH_ID> --clientid <CLIENT_ID> --certificateid <CERTIFICATE_ID> --privatekeypath <PATH_TO_PRIVATE_KEY_PEM> --scope "rest_webservices restlets"
 ```
 
 ## Release Notes & Documentation
@@ -104,3 +146,5 @@ SuiteCloud CLI for Node.js is an open source project. Pull Requests are currentl
 Copyright (c) 2019, 2023 Oracle and/or its affiliates The Universal Permissive License (UPL), Version 1.0.
 
 By installing SuiteCloud CLI for Node.js, you are accepting the installation of the SuiteCloud SDK dependency under the [Oracle Free Use Terms and Conditions](https://www.oracle.com/downloads/licenses/oracle-free-license.html) license.
+
+Note: this java-free fork does not download or execute the Oracle `cli-*.jar` at runtime; it reimplements the SDK behavior in Node.js.

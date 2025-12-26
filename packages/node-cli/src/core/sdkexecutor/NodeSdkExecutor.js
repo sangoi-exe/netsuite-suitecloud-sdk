@@ -17,9 +17,13 @@ const NetSuiteCiAuthService = require('../../services/auth/NetSuiteCiAuthService
 const NetSuiteFileCabinetService = require('../../services/netsuite/NetSuiteFileCabinetService');
 const NetSuiteFileCabinetUploadService = require('../../services/netsuite/NetSuiteFileCabinetUploadService');
 const NetSuiteFileCabinetImportService = require('../../services/netsuite/NetSuiteFileCabinetImportService');
+const NetSuiteCustomObjectsService = require('../../services/netsuite/NetSuiteCustomObjectsService');
 const NetSuiteSdfDevFrameworkService = require('../../services/netsuite/NetSuiteSdfDevFrameworkService');
+const ProjectInfoService = require('../../services/ProjectInfoService');
+const CookieJar = require('../../utils/http/CookieJar');
 const path = require('path');
 const fs = require('fs');
+const { PROJECT_ACP } = require('../../ApplicationConstants');
 
 const COMMANDS = {
 	PACKAGE: 'package',
@@ -36,6 +40,10 @@ const COMMANDS = {
 	LISTFILES: 'listfiles',
 	UPLOADFILES: 'uploadfiles',
 	IMPORTFILES: 'importfiles',
+	LISTOBJECTS: 'listobjects',
+	IMPORTOBJECTS: 'importobjects',
+	UPDATE: 'update',
+	UPDATE_CUSTOM_RECORD_WITH_INSTANCES: 'updatecustomrecordwithinstances',
 };
 
 const PARAMS = {
@@ -62,6 +70,9 @@ const PARAMS = {
 	RENAMETO: '-renameto',
 	FOLDER: '-folder',
 	PATHS: '-paths',
+	APP_ID: '-appid',
+	SCRIPT_ID: '-scriptid',
+	DESTINATION_FOLDER: '-destinationfolder',
 	ACCOUNT_SPECIFIC_VALUES: '-accountspecificvalues',
 	LOG: '-log',
 	EXCLUDE_PROPERTIES: '-excludeproperties',
@@ -82,6 +93,10 @@ const SUPPORTED_COMMANDS = [
 	COMMANDS.LISTFILES,
 	COMMANDS.UPLOADFILES,
 	COMMANDS.IMPORTFILES,
+	COMMANDS.LISTOBJECTS,
+	COMMANDS.IMPORTOBJECTS,
+	COMMANDS.UPDATE,
+	COMMANDS.UPDATE_CUSTOM_RECORD_WITH_INSTANCES,
 ];
 
 const FLAGS = {
@@ -89,6 +104,7 @@ const FLAGS = {
 	LIST: '-list',
 	VALIDATE: '-validate',
 	APPLY_INSTALLATION_PREFERENCES: '-applyinstallprefs',
+	EXCLUDE_FILES: '-excludefiles',
 };
 
 function buildNotImplementedMessage(executionContext) {
@@ -119,6 +135,7 @@ module.exports = class NodeSdkExecutor {
 		this._netSuiteFileCabinetService = new NetSuiteFileCabinetService();
 		this._netSuiteFileCabinetUploadService = new NetSuiteFileCabinetUploadService();
 		this._netSuiteFileCabinetImportService = new NetSuiteFileCabinetImportService();
+		this._netSuiteCustomObjectsService = new NetSuiteCustomObjectsService();
 		this._netSuiteSdfDevFrameworkService = new NetSuiteSdfDevFrameworkService();
 	}
 
@@ -164,6 +181,22 @@ module.exports = class NodeSdkExecutor {
 		}
 		if (executionContext && executionContext.getCommand && executionContext.getCommand() === COMMANDS.IMPORTFILES) {
 			return this._importFiles(executionContext);
+		}
+		if (executionContext && executionContext.getCommand && executionContext.getCommand() === COMMANDS.LISTOBJECTS) {
+			return this._listObjects(executionContext);
+		}
+		if (executionContext && executionContext.getCommand && executionContext.getCommand() === COMMANDS.IMPORTOBJECTS) {
+			return this._importObjects(executionContext);
+		}
+		if (executionContext && executionContext.getCommand && executionContext.getCommand() === COMMANDS.UPDATE) {
+			return this._updateObjects(executionContext);
+		}
+		if (
+			executionContext &&
+			executionContext.getCommand &&
+			executionContext.getCommand() === COMMANDS.UPDATE_CUSTOM_RECORD_WITH_INSTANCES
+		) {
+			return this._updateCustomRecordWithInstances(executionContext);
 		}
 
 		if (executionContext && executionContext.isIntegrationMode && executionContext.isIntegrationMode()) {
@@ -477,6 +510,27 @@ module.exports = class NodeSdkExecutor {
 		return raw.split(/\s+/).filter(Boolean);
 	}
 
+	_tryGetProjectApplicationId(projectFolder) {
+		try {
+			const projectInfo = new ProjectInfoService(projectFolder);
+			if (!projectInfo.isSuiteAppProject()) {
+				return null;
+			}
+			const applicationId = projectInfo.getApplicationId();
+			return applicationId ? `${applicationId}`.trim() : null;
+		} catch (e) {
+			return null;
+		}
+	}
+
+	_getPackageRoot(projectFolder) {
+		const applicationId = this._tryGetProjectApplicationId(projectFolder);
+		if (applicationId) {
+			return `/SuiteApps/${applicationId}`;
+		}
+		return '/SuiteScripts';
+	}
+
 	async _uploadFiles(executionContext) {
 		const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
 		const authId = params[PARAMS.AUTH_ID];
@@ -552,10 +606,10 @@ module.exports = class NodeSdkExecutor {
 		}
 	}
 
-	async _importFiles(executionContext) {
-		const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
-		const authId = params[PARAMS.AUTH_ID];
-		const projectFolder = CommandUtils.unquoteString(params[PARAMS.PROJECT] || '');
+		async _importFiles(executionContext) {
+			const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
+			const authId = params[PARAMS.AUTH_ID];
+			const projectFolder = CommandUtils.unquoteString(params[PARAMS.PROJECT] || '');
 		const pathsRaw = params[PARAMS.PATHS];
 		const excludeProperties = Object.prototype.hasOwnProperty.call(params, PARAMS.EXCLUDE_PROPERTIES);
 
@@ -600,13 +654,308 @@ module.exports = class NodeSdkExecutor {
 		} catch (error) {
 			const message = error && error.message ? error.message : `${error}`;
 			return { status: 'ERROR', errorMessages: [message] };
+			}
 		}
-	}
 
-	async _package(executionContext) {
-		const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
-		const projectFolder = CommandUtils.unquoteString(params[PARAMS.PROJECT] || '');
-		const destinationFolder = CommandUtils.unquoteString(params[PARAMS.DESTINATION] || '');
+		async _listObjects(executionContext) {
+			const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
+			const authId = params[PARAMS.AUTH_ID];
+			const appId = params[PARAMS.APP_ID] ? `${params[PARAMS.APP_ID]}`.trim() : null;
+			const types = params[PARAMS.TYPE] ? this._parseQuotedList(params[PARAMS.TYPE]) : [];
+			const scriptIdContains = params[PARAMS.SCRIPT_ID] ? `${params[PARAMS.SCRIPT_ID]}`.trim() : '';
+
+			if (!authId) {
+				return { status: 'ERROR', errorMessages: ['Missing -authid for listobjects.'] };
+			}
+
+			try {
+				const { systemDomain, accessToken } = await this._ensureValidAccessToken(authId);
+				if (!systemDomain) {
+					throw new Error(`Authentication ID "${authId}" is missing system domain information.`);
+				}
+
+				const objects = await this._netSuiteCustomObjectsService.listObjects({
+					systemDomain,
+					accessToken,
+					types,
+					scriptIdContains,
+					appId,
+				});
+
+				return {
+					status: 'SUCCESS',
+					data: objects,
+					resultMessage: `Found ${objects.length} object(s).`,
+					errorMessages: [],
+				};
+			} catch (error) {
+				const message = error && error.message ? error.message : `${error}`;
+				return { status: 'ERROR', errorMessages: [message] };
+			}
+		}
+
+		async _importObjects(executionContext) {
+			const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
+			const flags = (executionContext && executionContext.getFlags && executionContext.getFlags()) || [];
+
+			const authId = params[PARAMS.AUTH_ID];
+			const projectFolder = CommandUtils.unquoteString(params[PARAMS.PROJECT] || '');
+			const destinationFolderRaw = CommandUtils.unquoteString(params[PARAMS.DESTINATION_FOLDER] || '');
+			const objectTypeRaw = params[PARAMS.TYPE] ? `${params[PARAMS.TYPE]}`.trim() : '';
+			const scriptIdsRaw = params[PARAMS.SCRIPT_ID];
+			const excludeFiles = flags.includes(FLAGS.EXCLUDE_FILES);
+
+			if (!authId) {
+				return { status: 'ERROR', errorMessages: ['Missing -authid for importobjects.'] };
+			}
+			if (!projectFolder) {
+				return { status: 'ERROR', errorMessages: ['Missing -project for importobjects.'] };
+			}
+			if (!destinationFolderRaw) {
+				return { status: 'ERROR', errorMessages: ['Missing -destinationfolder for importobjects.'] };
+			}
+			if (!objectTypeRaw) {
+				return { status: 'ERROR', errorMessages: ['Missing -type for importobjects.'] };
+			}
+			if (!scriptIdsRaw) {
+				return { status: 'ERROR', errorMessages: ['Missing -scriptid for importobjects.'] };
+			}
+
+			const appId = params[PARAMS.APP_ID] ? `${params[PARAMS.APP_ID]}`.trim() : null;
+			const scriptIds = this._parseQuotedList(scriptIdsRaw);
+			if (scriptIds.length === 0) {
+				return { status: 'ERROR', errorMessages: ['No script IDs provided for importobjects.'] };
+			}
+
+			const destinationFolder = path.resolve(projectFolder, destinationFolderRaw.replace(/^\/+/, ''));
+			const destinationRelative = path.relative(projectFolder, destinationFolder);
+			if (destinationRelative.startsWith('..') || path.isAbsolute(destinationRelative)) {
+				return { status: 'ERROR', errorMessages: ['Destination folder must be inside the project folder.'] };
+			}
+			const objectsPrefix = `Objects${path.sep}`;
+			if (destinationRelative !== 'Objects' && !destinationRelative.startsWith(objectsPrefix)) {
+				return { status: 'ERROR', errorMessages: ['Destination folder must be within the Objects folder.'] };
+			}
+
+			try {
+				const { systemDomain, accessToken } = await this._ensureValidAccessToken(authId);
+				if (!systemDomain) {
+					throw new Error(`Authentication ID "${authId}" is missing system domain information.`);
+				}
+
+				const packageRoot = this._getPackageRoot(projectFolder);
+				let objects = [];
+				const missingFromList = [];
+				const isAll = objectTypeRaw.toUpperCase() === 'ALL';
+
+				if (isAll) {
+					const listed = await this._netSuiteCustomObjectsService.listObjects({
+						systemDomain,
+						accessToken,
+						types: [],
+						scriptIdContains: '',
+						appId,
+						packageRoot,
+					});
+					const byScriptId = new Map(listed.map((o) => [o.scriptId, o]));
+					for (const id of scriptIds) {
+						const match = byScriptId.get(id);
+						if (!match) {
+							missingFromList.push(id);
+							continue;
+						}
+						objects.push({ type: match.type, scriptId: match.scriptId, appId: match.appId || '' });
+					}
+				} else {
+					objects = scriptIds.map((id) => ({ type: objectTypeRaw, scriptId: id, appId: appId || '' }));
+				}
+
+				if (objects.length > 0) {
+					const importResult = await this._netSuiteCustomObjectsService.importObjects({
+						systemDomain,
+						accessToken,
+						destinationFolder,
+						objects,
+						packageRoot,
+						excludeFiles,
+					});
+
+					const statusResults = (importResult && importResult.results) || [];
+					const statusByKey = new Map(statusResults.map((r) => [r.key, r]));
+
+					const successfulImports = [];
+					const failedImports = [];
+					for (const obj of objects) {
+						const status = statusByKey.get(obj.scriptId);
+						const statusType = status && status.type ? `${status.type}` : 'FAILED';
+						const statusMessage = status && status.message ? `${status.message}` : '';
+						const entry = {
+							customObject: { type: obj.type, id: obj.scriptId, result: { type: statusType, message: statusMessage } },
+							referencedFileImportResult: { successfulImports: [], failedImports: [] },
+						};
+
+						if (`${statusType}`.toUpperCase() === 'SUCCESS') {
+							successfulImports.push(entry);
+						} else {
+							failedImports.push(entry);
+						}
+					}
+
+					for (const id of missingFromList) {
+						failedImports.push({
+							customObject: { type: 'UNKNOWN', id, result: { type: 'FAILED', message: 'Object not found in account listing.' } },
+							referencedFileImportResult: { successfulImports: [], failedImports: [] },
+						});
+					}
+
+					return {
+						status: 'SUCCESS',
+						data: { successfulImports, failedImports },
+						resultMessage: `Imported ${successfulImports.length} object(s), ${failedImports.length} failed.`,
+						errorMessages: [],
+					};
+				}
+
+				return {
+					status: 'SUCCESS',
+					data: { successfulImports: [], failedImports: missingFromList.map((id) => ({ customObject: { type: 'UNKNOWN', id } })) },
+					resultMessage: 'No objects to import.',
+					errorMessages: [],
+				};
+			} catch (error) {
+				const message = error && error.message ? error.message : `${error}`;
+				return { status: 'ERROR', errorMessages: [message] };
+			}
+			}
+
+		async _updateObjects(executionContext) {
+			const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
+			const authId = params[PARAMS.AUTH_ID];
+			const projectFolder = CommandUtils.unquoteString(params[PARAMS.PROJECT] || '');
+			const scriptIdsRaw = params[PARAMS.SCRIPT_ID];
+
+			if (!authId) {
+				return { status: 'ERROR', errorMessages: ['Missing -authid for update.'] };
+			}
+			if (!projectFolder) {
+				return { status: 'ERROR', errorMessages: ['Missing -project for update.'] };
+			}
+			if (!scriptIdsRaw) {
+				return { status: 'ERROR', errorMessages: ['Missing -scriptid for update.'] };
+			}
+
+			const scriptIds = this._parseQuotedList(scriptIdsRaw);
+			if (scriptIds.length === 0) {
+				return { status: 'ERROR', errorMessages: ['No script IDs provided for update.'] };
+			}
+
+			try {
+				const { systemDomain, accessToken } = await this._ensureValidAccessToken(authId);
+				if (!systemDomain) {
+					throw new Error(`Authentication ID "${authId}" is missing system domain information.`);
+				}
+
+				const packageRoot = this._getPackageRoot(projectFolder);
+				const listed = await this._netSuiteCustomObjectsService.listObjects({
+					systemDomain,
+					accessToken,
+					types: [],
+					scriptIdContains: '',
+					packageRoot,
+				});
+
+				const byScriptId = new Map(listed.map((o) => [o.scriptId, o]));
+				const objects = [];
+				const missing = [];
+
+				for (const id of scriptIds) {
+					const match = byScriptId.get(id);
+					if (!match) {
+						missing.push(id);
+						continue;
+					}
+					objects.push({ type: match.type, scriptId: match.scriptId, appId: match.appId || '' });
+				}
+
+				const results = [];
+				if (objects.length > 0) {
+					const updateResult = await this._netSuiteCustomObjectsService.updateObjects({
+						systemDomain,
+						accessToken,
+						projectFolder,
+						objects,
+						packageRoot,
+					});
+					if (updateResult && Array.isArray(updateResult.results)) {
+						results.push(...updateResult.results);
+					}
+				}
+
+				for (const id of missing) {
+					results.push({ key: id, type: 'FAILED', message: 'Object not found in account listing.' });
+				}
+
+				const successCount = results.filter((r) => `${r && r.type ? r.type : ''}`.toUpperCase() === 'SUCCESS').length;
+				const failedCount = results.length - successCount;
+				return {
+					status: 'SUCCESS',
+					data: results,
+					resultMessage: `Updated ${successCount} object(s), ${failedCount} failed.`,
+					errorMessages: [],
+				};
+			} catch (error) {
+				const message = error && error.message ? error.message : `${error}`;
+				return { status: 'ERROR', errorMessages: [message] };
+			}
+		}
+
+		async _updateCustomRecordWithInstances(executionContext) {
+			const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
+			const authId = params[PARAMS.AUTH_ID];
+			const projectFolder = CommandUtils.unquoteString(params[PARAMS.PROJECT] || '');
+			const scriptId = params[PARAMS.SCRIPT_ID] ? `${params[PARAMS.SCRIPT_ID]}`.trim() : '';
+
+			if (!authId) {
+				return { status: 'ERROR', errorMessages: ['Missing -authid for updatecustomrecordwithinstances.'] };
+			}
+			if (!projectFolder) {
+				return { status: 'ERROR', errorMessages: ['Missing -project for updatecustomrecordwithinstances.'] };
+			}
+			if (!scriptId) {
+				return { status: 'ERROR', errorMessages: ['Missing -scriptid for updatecustomrecordwithinstances.'] };
+			}
+
+			try {
+				const { systemDomain, accessToken } = await this._ensureValidAccessToken(authId);
+				if (!systemDomain) {
+					throw new Error(`Authentication ID "${authId}" is missing system domain information.`);
+				}
+
+				const appId = this._tryGetProjectApplicationId(projectFolder);
+				const updateResult = await this._netSuiteCustomObjectsService.updateCustomRecordWithInstances({
+					systemDomain,
+					accessToken,
+					projectFolder,
+					scriptId,
+					appId,
+				});
+
+				const extractedCount = updateResult && Array.isArray(updateResult.extractedPaths) ? updateResult.extractedPaths.length : 0;
+				return {
+					status: 'SUCCESS',
+					data: `Custom record "${scriptId}" updated (with instances). Extracted ${extractedCount} file(s).`,
+					errorMessages: [],
+				};
+			} catch (error) {
+				const message = error && error.message ? error.message : `${error}`;
+				return { status: 'ERROR', errorMessages: [message] };
+			}
+		}
+
+		async _package(executionContext) {
+			const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
+			const projectFolder = CommandUtils.unquoteString(params[PARAMS.PROJECT] || '');
+			const destinationFolder = CommandUtils.unquoteString(params[PARAMS.DESTINATION] || '');
 
 		const result = await this._projectPackagingService.packageProject({ projectFolder, destinationFolder });
 		if (!result.ok) {

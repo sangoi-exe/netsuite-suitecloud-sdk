@@ -13,3 +13,9 @@ packages/**/dist
 
 # config
 **/core/sdksetup/config*.json
+
+# Windows download metadata
+*:Zone.Identifier
+
+# session artifacts / large logs
+log-sessao*.txt
