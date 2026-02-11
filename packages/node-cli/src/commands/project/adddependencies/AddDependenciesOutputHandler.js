@@ -19,6 +19,10 @@ const DEPENDENCY_TYPES = {
 		name: 'FILE',
 		prefix: 'File -',
 	},
+	BUNDLE: {
+		name: 'BUNDLE',
+		prefix: 'Bundle -',
+	},
 	FOLDER: {
 		name: 'FOLDER',
 		prefix: 'Folder -',
@@ -80,6 +84,12 @@ module.exports = class AddDependenciesOutputFormatter extends BaseOutputHandler 
 		const files = data.filter((dependency) => dependency.type === DEPENDENCY_TYPES.FILE.name);
 		files.forEach((file) => {
 			dependenciesString.push(`${DEPENDENCY_TYPES.FILE.prefix} ${file.value}`);
+		});
+
+		//Bundles
+		const bundles = data.filter((dependency) => dependency.type === DEPENDENCY_TYPES.BUNDLE.name);
+		bundles.forEach((bundle) => {
+			dependenciesString.push(`${DEPENDENCY_TYPES.BUNDLE.prefix} ${OBJECT_REFERENCE_ATTRIBUTES.BUNDLE_ID}${bundle.value}`);
 		});
 
 		//Folders

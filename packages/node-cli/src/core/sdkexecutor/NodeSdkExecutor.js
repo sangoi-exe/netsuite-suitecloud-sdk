@@ -22,6 +22,8 @@ const NetSuiteFileCabinetImportService = require('../../services/netsuite/NetSui
 const NetSuiteCustomObjectsService = require('../../services/netsuite/NetSuiteCustomObjectsService');
 const NetSuiteSdfDevFrameworkService = require('../../services/netsuite/NetSuiteSdfDevFrameworkService');
 const ProjectInfoService = require('../../services/ProjectInfoService');
+const NodeTranslationService = require('../../services/NodeTranslationService');
+const { UTILS } = require('../../services/TranslationKeys');
 const CookieJar = require('../../utils/http/CookieJar');
 const path = require('path');
 const fs = require('fs');
@@ -492,29 +494,29 @@ module.exports = class NodeSdkExecutor {
 
 		if (!hasToken || isExpired) {
 			let authResult;
-			if (record.type === 'CLIENT_CREDENTIALS') {
-				authResult = await this._ciAuthService.authenticateCi({
-					accountId: record.authConfig.accountId,
-					clientId: record.authConfig.clientId,
-					certificateId: record.authConfig.certificateId,
-					privateKeyPath: record.authConfig.privateKeyPath,
-					domain: record.authConfig.domain,
-					scope: record.authConfig.scope,
-				});
-			} else if (record.type === 'PKCE') {
-				const refreshToken = record.token && record.token.refreshToken;
-				if (!refreshToken) {
-					throw new Error(`Authentication ID "${authId}" has no refresh token available. Re-run "suitecloud account:setup".`);
-				}
-				authResult = await this._pkceAuthService.refreshWithRefreshToken({
-					accountId: record.authConfig.accountId,
-					clientId: record.authConfig.clientId,
-					domain: record.authConfig.domain,
-					scope: record.authConfig.scope,
-					domains: record.domains,
-					refreshToken,
-				});
-			} else {
+				if (record.type === 'CLIENT_CREDENTIALS') {
+					authResult = await this._ciAuthService.authenticateCi({
+						accountId: record.authConfig.accountId,
+						clientId: record.authConfig.clientId,
+						certificateId: record.authConfig.certificateId,
+						privateKeyPath: record.authConfig.privateKeyPath,
+						domain: record.authConfig.domain,
+						scope: record.authConfig.scope,
+					});
+				} else if (record.type === 'PKCE') {
+					const refreshToken = record.token && record.token.refreshToken;
+					if (!refreshToken) {
+						throw new Error(NodeTranslationService.getMessage(UTILS.AUTHENTICATION.OAUTH_REFRESH_MISSING_TOKEN));
+					}
+					authResult = await this._pkceAuthService.refreshWithRefreshToken({
+						accountId: record.authConfig.accountId,
+						clientId: record.authConfig.clientId,
+						domain: record.authConfig.domain,
+						scope: record.authConfig.scope,
+						domains: record.domains,
+						refreshToken,
+					});
+				} else {
 				throw new Error(`Authentication ID "${authId}" has unsupported auth type "${record.type}".`);
 			}
 

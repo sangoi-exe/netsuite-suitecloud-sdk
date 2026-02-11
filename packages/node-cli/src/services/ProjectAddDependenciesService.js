@@ -96,9 +96,15 @@ function parseDependencyQualifierString(input) {
 
 	return {
 		appId: qualifiers.appid || '',
-		bundleId: qualifiers.bundleid || '',
+		bundleIds: `${qualifiers.bundleid || ''}`
+			.split('|')
+			.map((value) => `${value}`.trim())
+			.filter(Boolean),
 		scriptId: qualifiers.scriptid || '',
 		objectType: qualifiers.objecttype || '',
+		filePath: qualifiers.file || qualifiers.filepath || qualifiers.path || qualifiers.fileref || '',
+		folderPath: qualifiers.folder || qualifiers.folderpath || '',
+		feature: qualifiers.feature || '',
 	};
 }
 
@@ -113,8 +119,63 @@ function normalizeFeatureValue(value) {
 	return `${value || ''}`.trim();
 }
 
+function normalizeFileCabinetPath(value) {
+	const raw = `${value || ''}`.trim().replaceAll('\\', '/');
+	if (!raw) {
+		return '';
+	}
+
+	const withoutQuotes = raw.replaceAll(/^[\"']+|[\"']+$/g, '');
+	const normalized = withoutQuotes.replaceAll(/[),;\]]+$/g, '');
+	if (!normalized) {
+		return '';
+	}
+
+	if (normalized.startsWith('/FileCabinet/')) {
+		return normalized.slice('/FileCabinet'.length);
+	}
+	if (normalized.startsWith('FileCabinet/')) {
+		return `/${normalized.slice('FileCabinet/'.length)}`;
+	}
+	return normalized.startsWith('/') ? normalized : `/${normalized}`;
+}
+
 function normalizeBooleanAttribute(value) {
 	return `${value || ''}`.trim().toLowerCase() === 'true';
+}
+
+function readBundleNodes(existing) {
+	const bundlesById = new Map();
+	for (const node of toArray(existing)) {
+		if (!node) {
+			continue;
+		}
+
+		if (typeof node === 'string') {
+			const ids = `${node}`
+				.split('|')
+				.map((id) => `${id}`.trim())
+				.filter(Boolean);
+			for (const id of ids) {
+				if (!bundlesById.has(id)) {
+					bundlesById.set(id, new Set());
+				}
+			}
+			continue;
+		}
+
+		const id = `${(node.$ && node.$.id) || node.id || node._ || ''}`.trim();
+		if (!id) {
+			continue;
+		}
+		const objects = new Set(
+			toArray(node.objects && node.objects.object)
+				.map((objectValue) => normalizeScriptId(objectValue))
+				.filter(Boolean)
+		);
+		bundlesById.set(id, objects);
+	}
+	return bundlesById;
 }
 
 function readFeatureNodes(existing) {
@@ -208,33 +269,78 @@ module.exports = class ProjectAddDependenciesService {
 			}
 		};
 
-		const existingObjects = new Set(toArray(manifest.dependencies.objects && manifest.dependencies.objects.object).map((o) => `${o}`.trim()).filter(Boolean));
+			const existingObjects = new Set(
+				toArray(manifest.dependencies.objects && manifest.dependencies.objects.object)
+					.map((objectValue) => normalizeScriptId(objectValue))
+					.filter(Boolean)
+			);
 
-		const existingObjectsByAppId = new Map();
-		const applications = toArray(manifest.dependencies.applications && manifest.dependencies.applications.application);
-		for (const app of applications) {
-			const id = app && app.$ ? `${app.$.id || ''}`.trim() : '';
-			if (!id) {
-				continue;
+			const appDependenciesById = new Map();
+			const applications = toArray(manifest.dependencies.applications && manifest.dependencies.applications.application);
+			for (const app of applications) {
+				const id = `${(app && app.$ && app.$.id) || ''}`.trim();
+				if (!id) {
+					continue;
+				}
+				const objects = new Set(
+					toArray(app.objects && app.objects.object)
+						.map((objectValue) => normalizeScriptId(objectValue))
+						.filter(Boolean)
+				);
+				const platformExtensions = new Set(
+					toArray(app.platformextensions && app.platformextensions.platformextension)
+						.map((platformExtension) => {
+							if (typeof platformExtension === 'string') {
+								return `${platformExtension}`.trim();
+							}
+							return `${(platformExtension && platformExtension.objecttype) || ''}`.trim();
+						})
+						.filter(Boolean)
+				);
+				appDependenciesById.set(id, { objects, platformExtensions });
 			}
-			const objects = new Set(toArray(app.objects && app.objects.object).map((o) => `${o}`.trim()).filter(Boolean));
-			existingObjectsByAppId.set(id, objects);
-		}
 
-		const ensureApplicationObject = (appId, scriptId) => {
-			const app = `${appId || ''}`.trim();
-			const script = normalizeScriptId(scriptId);
-			if (!app || !script) {
-				return;
-			}
-			const set = existingObjectsByAppId.get(app) || new Set();
-			if (set.has(script)) {
-				return;
-			}
-			set.add(script);
-			existingObjectsByAppId.set(app, set);
-			addedDependencies.push({ type: 'OBJECT', scriptId: script, appId: app });
-		};
+			const existingFiles = new Set(
+				toArray(manifest.dependencies.files && manifest.dependencies.files.file)
+					.map((fileValue) => normalizeFileCabinetPath(fileValue))
+					.filter(Boolean)
+			);
+			const existingFolders = new Set(
+				toArray(manifest.dependencies.folders && manifest.dependencies.folders.folder)
+					.map((folderValue) => normalizeFileCabinetPath(folderValue))
+					.filter(Boolean)
+			);
+			const bundleDependenciesById = readBundleNodes(manifest.dependencies.bundles && manifest.dependencies.bundles.bundle);
+
+			const ensureApplicationObject = (appId, scriptId) => {
+				const app = `${appId || ''}`.trim();
+				const script = normalizeScriptId(scriptId);
+				if (!app || !script) {
+					return;
+				}
+				const existing = appDependenciesById.get(app) || { objects: new Set(), platformExtensions: new Set() };
+				if (existing.objects.has(script)) {
+					return;
+				}
+				existing.objects.add(script);
+				appDependenciesById.set(app, existing);
+				addedDependencies.push({ type: 'OBJECT', scriptId: script, appId: app });
+			};
+
+			const ensureApplicationPlatformExtension = (appId, objectType) => {
+				const app = `${appId || ''}`.trim();
+				const normalizedObjectType = `${objectType || ''}`.trim();
+				if (!app || !normalizedObjectType) {
+					return;
+				}
+				const existing = appDependenciesById.get(app) || { objects: new Set(), platformExtensions: new Set() };
+				if (existing.platformExtensions.has(normalizedObjectType)) {
+					return;
+				}
+				existing.platformExtensions.add(normalizedObjectType);
+				appDependenciesById.set(app, existing);
+				addedDependencies.push({ type: 'PLATFORMEXTENSION', appId: app, objectType: normalizedObjectType });
+			};
 
 		const ensureRootObject = (scriptId) => {
 			const script = normalizeScriptId(scriptId);
@@ -248,22 +354,56 @@ module.exports = class ProjectAddDependenciesService {
 			addedDependencies.push({ type: 'OBJECT', scriptId: script });
 		};
 
-		const ensureFile = (filePath) => {
-			const normalized = `${filePath || ''}`.trim();
-			if (!normalized) {
-				return;
-			}
-			manifest.dependencies.files = manifest.dependencies.files || {};
-			const existing = new Set(
-				toArray(manifest.dependencies.files.file).map((f) => `${f}`.trim()).filter(Boolean)
-			);
-			if (existing.has(normalized)) {
-				return;
-			}
-			existing.add(normalized);
-			manifest.dependencies.files.file = [...existing].sort();
-			addedDependencies.push({ type: 'FILE', value: normalized });
-		};
+			const ensureFile = (filePath) => {
+				const normalized = normalizeFileCabinetPath(filePath);
+				if (!normalized) {
+					return;
+				}
+				if (existingFiles.has(normalized)) {
+					return;
+				}
+				existingFiles.add(normalized);
+				addedDependencies.push({ type: 'FILE', value: normalized });
+			};
+
+			const ensureFolder = (folderPath) => {
+				const normalized = normalizeFileCabinetPath(folderPath);
+				if (!normalized) {
+					return;
+				}
+				if (existingFolders.has(normalized)) {
+					return;
+				}
+				existingFolders.add(normalized);
+				addedDependencies.push({ type: 'FOLDER', value: normalized });
+			};
+
+			const ensureBundleDependency = (bundleId) => {
+				const normalized = `${bundleId || ''}`.trim();
+				if (!normalized) {
+					return;
+				}
+				if (bundleDependenciesById.has(normalized)) {
+					return;
+				}
+				bundleDependenciesById.set(normalized, new Set());
+				addedDependencies.push({ type: 'BUNDLE', value: normalized });
+			};
+
+			const ensureBundleObjectDependency = (bundleId, scriptId) => {
+				const normalizedBundleId = `${bundleId || ''}`.trim();
+				const normalizedScriptId = normalizeScriptId(scriptId);
+				if (!normalizedBundleId || !normalizedScriptId) {
+					return;
+				}
+				const existingObjectsForBundle = bundleDependenciesById.get(normalizedBundleId) || new Set();
+				if (existingObjectsForBundle.has(normalizedScriptId)) {
+					return;
+				}
+				existingObjectsForBundle.add(normalizedScriptId);
+				bundleDependenciesById.set(normalizedBundleId, existingObjectsForBundle);
+				addedDependencies.push({ type: 'OBJECT', scriptId: normalizedScriptId, bundleIds: normalizedBundleId });
+			};
 
 		if (!all) {
 			for (const featureRef of featureRefs) {
@@ -288,8 +428,8 @@ module.exports = class ProjectAddDependenciesService {
 
 			const objectsDir = path.join(projectFolder, 'Objects');
 			const objectXmlFiles = listFilesRecursive(objectsDir, (p) => `${p}`.toLowerCase().endsWith('.xml'));
-			for (const xmlPath of objectXmlFiles) {
-				let xmlText;
+				for (const xmlPath of objectXmlFiles) {
+					let xmlText;
 				try {
 					xmlText = fs.readFileSync(xmlPath, 'utf8');
 				} catch (e) {
@@ -300,20 +440,42 @@ module.exports = class ProjectAddDependenciesService {
 					ensureFeature('CUSTOMRECORDS', true);
 				}
 
-				for (const qualifierText of extractBracketDependencies(xmlText)) {
-					const dep = parseDependencyQualifierString(qualifierText);
-					const depScriptId = normalizeScriptId(dep.scriptId);
-					if (!depScriptId) {
-						continue;
-					}
+					for (const qualifierText of extractBracketDependencies(xmlText)) {
+						const dep = parseDependencyQualifierString(qualifierText);
+						const depScriptId = normalizeScriptId(dep.scriptId);
 
-					if (dep.appId && dep.appId !== selfAppId) {
-						ensureApplicationObject(dep.appId, depScriptId);
-						continue;
+						if (dep.feature) {
+							const [featureName, requirement] = `${dep.feature}`.split(':');
+							ensureFeature(featureName, `${requirement || ''}`.trim().toLowerCase() !== 'optional');
+						}
+						if (dep.filePath) {
+							ensureFile(dep.filePath);
+						}
+						if (dep.folderPath) {
+							ensureFolder(dep.folderPath);
+						}
+						if (dep.appId && dep.objectType && dep.appId !== selfAppId) {
+							ensureApplicationPlatformExtension(dep.appId, dep.objectType);
+						}
+						if (dep.bundleIds && dep.bundleIds.length > 0) {
+							for (const bundleId of dep.bundleIds) {
+								if (depScriptId) {
+									ensureBundleObjectDependency(bundleId, depScriptId);
+								} else {
+									ensureBundleDependency(bundleId);
+								}
+							}
+						}
+						if (dep.appId && depScriptId && dep.appId !== selfAppId) {
+							ensureApplicationObject(dep.appId, depScriptId);
+							continue;
+						}
+						if (!dep.appId && (!dep.bundleIds || dep.bundleIds.length === 0) && depScriptId) {
+							ensureRootObject(depScriptId);
+						}
 					}
 				}
 			}
-		}
 
 		if (addedDependencies.length === 0) {
 			return { ok: true, addedDependencies: [] };
@@ -328,20 +490,76 @@ module.exports = class ProjectAddDependenciesService {
 			delete manifest.dependencies.features;
 		}
 
-		if (existingObjects.size > 0) {
-			manifest.dependencies.objects = manifest.dependencies.objects || {};
-			manifest.dependencies.objects.object = [...existingObjects].sort();
-		}
+			if (existingObjects.size > 0) {
+				manifest.dependencies.objects = manifest.dependencies.objects || {};
+				manifest.dependencies.objects.object = [...existingObjects].sort();
+			} else {
+				delete manifest.dependencies.objects;
+			}
 
-		if (existingObjectsByAppId.size > 0) {
-			manifest.dependencies.applications = manifest.dependencies.applications || {};
-			manifest.dependencies.applications.application = [...existingObjectsByAppId.entries()]
-				.sort(([a], [b]) => a.localeCompare(b))
-				.map(([appId, objectsSet]) => ({
-					$: { id: appId },
-					objects: { object: [...objectsSet].sort() },
-				}));
-		}
+			if (existingFiles.size > 0) {
+				manifest.dependencies.files = manifest.dependencies.files || {};
+				manifest.dependencies.files.file = [...existingFiles].sort();
+			} else {
+				delete manifest.dependencies.files;
+			}
+
+			if (existingFolders.size > 0) {
+				manifest.dependencies.folders = manifest.dependencies.folders || {};
+				manifest.dependencies.folders.folder = [...existingFolders].sort();
+			} else {
+				delete manifest.dependencies.folders;
+			}
+
+			const applicationEntries = [...appDependenciesById.entries()]
+				.map(([appId, dependencyInfo]) => ({
+					appId,
+					objects: dependencyInfo && dependencyInfo.objects ? dependencyInfo.objects : new Set(),
+					platformExtensions:
+						dependencyInfo && dependencyInfo.platformExtensions ? dependencyInfo.platformExtensions : new Set(),
+				}))
+				.filter((entry) => entry.objects.size > 0 || entry.platformExtensions.size > 0);
+			if (applicationEntries.length > 0) {
+				manifest.dependencies.applications = manifest.dependencies.applications || {};
+				manifest.dependencies.applications.application = applicationEntries
+					.sort((left, right) => left.appId.localeCompare(right.appId))
+					.map((entry) => {
+						const applicationDependency = { $: { id: entry.appId } };
+						if (entry.objects.size > 0) {
+							applicationDependency.objects = { object: [...entry.objects].sort() };
+						}
+						if (entry.platformExtensions.size > 0) {
+							applicationDependency.platformextensions = {
+								platformextension: [...entry.platformExtensions]
+									.sort()
+									.map((objectType) => ({ objecttype: objectType })),
+							};
+						}
+						return applicationDependency;
+					});
+			} else {
+				delete manifest.dependencies.applications;
+			}
+
+			const bundleEntries = [...bundleDependenciesById.entries()]
+				.map(([bundleId, objectsSet]) => ({ bundleId, objectsSet: objectsSet || new Set() }))
+				.filter((entry) => entry.bundleId);
+			if (bundleEntries.length > 0) {
+				manifest.dependencies.bundles = manifest.dependencies.bundles || {};
+				manifest.dependencies.bundles.bundle = bundleEntries
+					.sort((left, right) => left.bundleId.localeCompare(right.bundleId))
+					.map((entry) => {
+						if (entry.objectsSet.size === 0) {
+							return entry.bundleId;
+						}
+						return {
+							$: { id: entry.bundleId },
+							objects: { object: [...entry.objectsSet].sort() },
+						};
+					});
+			} else {
+				delete manifest.dependencies.bundles;
+			}
 
 		try {
 			const builder = new xml2js.Builder({
