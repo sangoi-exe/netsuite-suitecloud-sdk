@@ -12,8 +12,10 @@ const ProjectCreationService = require('../../services/ProjectCreationService');
 const SuiteScriptFileService = require('../../services/SuiteScriptFileService');
 const ProjectValidationService = require('../../services/ProjectValidationService');
 const ProjectPreviewService = require('../../services/ProjectPreviewService');
+const ProjectAddDependenciesService = require('../../services/ProjectAddDependenciesService');
 const AuthStoreService = require('../../services/auth/AuthStoreService');
 const NetSuiteCiAuthService = require('../../services/auth/NetSuiteCiAuthService');
+const NetSuitePkceAuthService = require('../../services/auth/NetSuitePkceAuthService');
 const NetSuiteFileCabinetService = require('../../services/netsuite/NetSuiteFileCabinetService');
 const NetSuiteFileCabinetUploadService = require('../../services/netsuite/NetSuiteFileCabinetUploadService');
 const NetSuiteFileCabinetImportService = require('../../services/netsuite/NetSuiteFileCabinetImportService');
@@ -29,9 +31,11 @@ const COMMANDS = {
 	PACKAGE: 'package',
 	CREATE_PROJECT: 'createproject',
 	CREATE_FILE: 'createfile',
+	ADD_DEPENDENCIES: 'adddependencies',
 	VALIDATE: 'validate',
 	PREVIEW: 'preview',
 	DEPLOY: 'deploy',
+	AUTHENTICATE: 'authenticate',
 	AUTHENTICATE_CI: 'authenticateci',
 	MANAGEAUTH: 'manageauth',
 	INSPECT_AUTHORIZATION: 'inspectauthorization',
@@ -76,15 +80,20 @@ const PARAMS = {
 	ACCOUNT_SPECIFIC_VALUES: '-accountspecificvalues',
 	LOG: '-log',
 	EXCLUDE_PROPERTIES: '-excludeproperties',
+	FEATURE: '-feature',
+	FILE: '-file',
+	OBJECT: '-object',
 };
 
 const SUPPORTED_COMMANDS = [
 	COMMANDS.PACKAGE,
 	COMMANDS.CREATE_PROJECT,
 	COMMANDS.CREATE_FILE,
+	COMMANDS.ADD_DEPENDENCIES,
 	COMMANDS.VALIDATE,
 	COMMANDS.PREVIEW,
 	COMMANDS.DEPLOY,
+	COMMANDS.AUTHENTICATE,
 	COMMANDS.AUTHENTICATE_CI,
 	COMMANDS.MANAGEAUTH,
 	COMMANDS.INSPECT_AUTHORIZATION,
@@ -105,6 +114,7 @@ const FLAGS = {
 	VALIDATE: '-validate',
 	APPLY_INSTALLATION_PREFERENCES: '-applyinstallprefs',
 	EXCLUDE_FILES: '-excludefiles',
+	ALL: '-all',
 };
 
 function buildNotImplementedMessage(executionContext) {
@@ -130,8 +140,10 @@ module.exports = class NodeSdkExecutor {
 		this._suiteScriptFileService = new SuiteScriptFileService();
 		this._projectValidationService = new ProjectValidationService();
 		this._projectPreviewService = new ProjectPreviewService();
+		this._projectAddDependenciesService = new ProjectAddDependenciesService();
 		this._authStoreService = new AuthStoreService(this._sdkPath);
 		this._ciAuthService = new NetSuiteCiAuthService();
+		this._pkceAuthService = new NetSuitePkceAuthService();
 		this._netSuiteFileCabinetService = new NetSuiteFileCabinetService();
 		this._netSuiteFileCabinetUploadService = new NetSuiteFileCabinetUploadService();
 		this._netSuiteFileCabinetImportService = new NetSuiteFileCabinetImportService();
@@ -149,6 +161,9 @@ module.exports = class NodeSdkExecutor {
 		if (executionContext && executionContext.getCommand && executionContext.getCommand() === COMMANDS.CREATE_FILE) {
 			return this._createFile(executionContext);
 		}
+		if (executionContext && executionContext.getCommand && executionContext.getCommand() === COMMANDS.ADD_DEPENDENCIES) {
+			return this._addDependencies(executionContext);
+		}
 		if (executionContext && executionContext.getCommand && executionContext.getCommand() === COMMANDS.VALIDATE) {
 			return this._validate(executionContext);
 		}
@@ -157,6 +172,9 @@ module.exports = class NodeSdkExecutor {
 		}
 		if (executionContext && executionContext.getCommand && executionContext.getCommand() === COMMANDS.DEPLOY) {
 			return this._deploy(executionContext);
+		}
+		if (executionContext && executionContext.getCommand && executionContext.getCommand() === COMMANDS.AUTHENTICATE) {
+			return this._authenticate(executionContext);
 		}
 		if (executionContext && executionContext.getCommand && executionContext.getCommand() === COMMANDS.AUTHENTICATE_CI) {
 			return this._authenticateCi(executionContext);
@@ -206,6 +224,45 @@ module.exports = class NodeSdkExecutor {
 			};
 		}
 		throw buildNotImplementedMessage(executionContext);
+	}
+
+	async _authenticate(executionContext) {
+		const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
+		const authId = params[PARAMS.AUTH_ID];
+		const domain = params[PARAMS.URL] ? CommandUtils.unquoteString(params[PARAMS.URL]) : null;
+
+		if (!authId) {
+			return { status: 'ERROR', errorMessages: ['Missing required parameter -authid for authenticate.'] };
+		}
+
+		try {
+			const authResult = await this._pkceAuthService.authenticate({
+				sdkPath: this._sdkPath,
+				domain,
+			});
+
+			const now = new Date().toISOString();
+			this._authStoreService.upsert(authId, {
+				type: 'PKCE',
+				accountInfo: authResult.accountInfo,
+				hostInfo: authResult.hostInfo,
+				domains: authResult.domains,
+				authConfig: authResult.authConfig,
+				token: authResult.token,
+				createdAt: now,
+				updatedAt: now,
+			});
+
+			return {
+				status: 'SUCCESS',
+				data: { accountInfo: authResult.accountInfo },
+				resultMessage: `Authentication ID "${authId}" configured.`,
+				errorMessages: [],
+			};
+		} catch (error) {
+			const message = error && error.message ? error.message : `${error}`;
+			return { status: 'ERROR', errorMessages: [message] };
+		}
 	}
 
 	async _authenticateCi(executionContext) {
@@ -353,11 +410,13 @@ module.exports = class NodeSdkExecutor {
 			if (!recordWithSecrets) {
 				return { status: 'ERROR', errorMessages: [`Authentication ID "${authId}" not found.`] };
 			}
-			if (!recordWithSecrets.authConfig || recordWithSecrets.type !== 'CLIENT_CREDENTIALS') {
-				return { status: 'ERROR', errorMessages: [`Authentication ID "${authId}" is not a CI (client_credentials) auth.`] };
+			if (!recordWithSecrets.authConfig) {
+				return { status: 'ERROR', errorMessages: [`Authentication ID "${authId}" has incomplete authentication configuration.`] };
 			}
 
-				const authResult = await this._ciAuthService.authenticateCi({
+			let authResult;
+			if (recordWithSecrets.type === 'CLIENT_CREDENTIALS') {
+				authResult = await this._ciAuthService.authenticateCi({
 					accountId: recordWithSecrets.authConfig.accountId,
 					clientId: recordWithSecrets.authConfig.clientId,
 					certificateId: recordWithSecrets.authConfig.certificateId,
@@ -365,13 +424,32 @@ module.exports = class NodeSdkExecutor {
 					domain: recordWithSecrets.authConfig.domain,
 					scope: recordWithSecrets.authConfig.scope,
 				});
+			} else if (recordWithSecrets.type === 'PKCE') {
+				authResult = await this._pkceAuthService.refreshWithRefreshToken({
+					accountId: recordWithSecrets.authConfig.accountId,
+					clientId: recordWithSecrets.authConfig.clientId,
+					domain: recordWithSecrets.authConfig.domain,
+					scope: recordWithSecrets.authConfig.scope,
+					domains: recordWithSecrets.domains,
+					refreshToken: recordWithSecrets.token && recordWithSecrets.token.refreshToken,
+				});
+			} else {
+				return { status: 'ERROR', errorMessages: [`Authentication ID "${authId}" has unsupported auth type "${recordWithSecrets.type}".`] };
+			}
 
 			this._authStoreService.upsert(authId, {
 				...recordWithSecrets,
 				accountInfo: authResult.accountInfo,
 				hostInfo: authResult.hostInfo,
 				domains: authResult.domains,
-				token: authResult.token,
+				authConfig: {
+					...(recordWithSecrets.authConfig || {}),
+					...((authResult && authResult.authConfig) || {}),
+				},
+				token: {
+					...(recordWithSecrets.token || {}),
+					...((authResult && authResult.token) || {}),
+				},
 				updatedAt: new Date().toISOString(),
 			});
 
@@ -389,16 +467,22 @@ module.exports = class NodeSdkExecutor {
 
 	async _ensureValidAccessToken(authId) {
 		let record;
+		let hydrationError;
 		try {
 			record = this._authStoreService.getWithSecrets(authId);
 		} catch (e) {
+			hydrationError = e;
 			// If the token is encrypted but no passkey is configured, fall back to a refresh using authConfig.
 			record = this._authStoreService.get(authId);
 		}
 		if (!record) {
 			throw new Error(`Authentication ID "${authId}" not found.`);
 		}
-		if (record.type !== 'CLIENT_CREDENTIALS' || !record.authConfig) {
+		if (record.type === 'PKCE' && hydrationError) {
+			throw hydrationError;
+		}
+		const isSupportedAuthType = record.type === 'CLIENT_CREDENTIALS' || record.type === 'PKCE';
+		if (!isSupportedAuthType || !record.authConfig) {
 			throw new Error(`Authentication ID "${authId}" is not a supported auth type for REST operations.`);
 		}
 
@@ -407,7 +491,9 @@ module.exports = class NodeSdkExecutor {
 		const hasToken = Boolean(record.token && record.token.accessToken);
 
 		if (!hasToken || isExpired) {
-				const authResult = await this._ciAuthService.authenticateCi({
+			let authResult;
+			if (record.type === 'CLIENT_CREDENTIALS') {
+				authResult = await this._ciAuthService.authenticateCi({
 					accountId: record.authConfig.accountId,
 					clientId: record.authConfig.clientId,
 					certificateId: record.authConfig.certificateId,
@@ -415,13 +501,36 @@ module.exports = class NodeSdkExecutor {
 					domain: record.authConfig.domain,
 					scope: record.authConfig.scope,
 				});
+			} else if (record.type === 'PKCE') {
+				const refreshToken = record.token && record.token.refreshToken;
+				if (!refreshToken) {
+					throw new Error(`Authentication ID "${authId}" has no refresh token available. Re-run "suitecloud account:setup".`);
+				}
+				authResult = await this._pkceAuthService.refreshWithRefreshToken({
+					accountId: record.authConfig.accountId,
+					clientId: record.authConfig.clientId,
+					domain: record.authConfig.domain,
+					scope: record.authConfig.scope,
+					domains: record.domains,
+					refreshToken,
+				});
+			} else {
+				throw new Error(`Authentication ID "${authId}" has unsupported auth type "${record.type}".`);
+			}
 
 			const updatedRecord = {
 				...record,
 				accountInfo: authResult.accountInfo,
 				hostInfo: authResult.hostInfo,
 				domains: authResult.domains,
-				token: authResult.token,
+				authConfig: {
+					...(record.authConfig || {}),
+					...((authResult && authResult.authConfig) || {}),
+				},
+				token: {
+					...(record.token || {}),
+					...((authResult && authResult.token) || {}),
+				},
 				updatedAt: new Date().toISOString(),
 			};
 
@@ -783,15 +892,129 @@ module.exports = class NodeSdkExecutor {
 					const statusResults = (importResult && importResult.results) || [];
 					const statusByKey = new Map(statusResults.map((r) => [r.key, r]));
 
+					const normalizeFileCabinetPath = (value) => {
+						const raw = `${value || ''}`.trim().replaceAll('\\', '/');
+						if (!raw) {
+							return '';
+						}
+						const stripped = raw.replaceAll(/^[\"']+|[\"']+$/g, '');
+						const withoutTrailingPunct = stripped.replaceAll(/[),;\]]+$/g, '');
+						return withoutTrailingPunct.startsWith('/') ? withoutTrailingPunct : `/${withoutTrailingPunct}`;
+					};
+
+					const decodeXmlEntities = (value) =>
+						`${value || ''}`
+							.replaceAll('&amp;', '&')
+							.replaceAll('&lt;', '<')
+							.replaceAll('&gt;', '>')
+							.replaceAll('&quot;', '"')
+							.replaceAll('&apos;', "'");
+
+					const extractReferencedFileCabinetPaths = (xmlText) => {
+						const text = `${xmlText || ''}`;
+						if (!text) {
+							return [];
+						}
+
+						const matches = text.match(/\/(?:SuiteScripts|SuiteApps|Templates|Web Site Hosting Files)\/[^<\"']+/g) || [];
+						const out = new Set();
+						for (const match of matches) {
+							const normalized = normalizeFileCabinetPath(decodeXmlEntities(match));
+							if (!normalized || normalized.endsWith('/')) {
+								continue;
+							}
+							out.add(normalized);
+						}
+						return [...out];
+					};
+
+					let referencedFilesByScriptId = new Map();
+					if (!excludeFiles) {
+						const projectInfo = new ProjectInfoService(projectFolder);
+						const isAcp = projectInfo.isAccountCustomizationProject();
+						if (isAcp) {
+							const extractedPaths = (importResult && Array.isArray(importResult.extractedPaths) && importResult.extractedPaths) || [];
+							const extractedXmlByScriptId = new Map();
+							for (const extractedPath of extractedPaths) {
+								if (!extractedPath) {
+									continue;
+								}
+								const baseName = path.basename(extractedPath, path.extname(extractedPath));
+								if (!baseName) {
+									continue;
+								}
+								extractedXmlByScriptId.set(baseName, extractedPath);
+								extractedXmlByScriptId.set(baseName.toLowerCase(), extractedPath);
+							}
+
+							for (const obj of objects) {
+								const scriptId = obj && obj.scriptId ? `${obj.scriptId}` : '';
+								if (!scriptId.toLowerCase().startsWith('customscript')) {
+									continue;
+								}
+								const status = statusByKey.get(scriptId);
+								const statusType = status && status.type ? `${status.type}` : 'FAILED';
+								if (`${statusType}`.toUpperCase() !== 'SUCCESS') {
+									continue;
+								}
+
+								const xmlPath = extractedXmlByScriptId.get(scriptId) || extractedXmlByScriptId.get(scriptId.toLowerCase());
+								if (!xmlPath || !fs.existsSync(xmlPath)) {
+									continue;
+								}
+
+								const xmlText = fs.readFileSync(xmlPath, 'utf8');
+								const referencedPaths = extractReferencedFileCabinetPaths(xmlText);
+								if (referencedPaths.length > 0) {
+									referencedFilesByScriptId.set(scriptId, referencedPaths);
+								}
+							}
+						}
+					}
+
+					let referencedFileImportResultByPath = new Map();
+					const allReferencedPaths = [...new Set([...referencedFilesByScriptId.values()].flat())];
+					if (allReferencedPaths.length > 0) {
+						try {
+							const referencedFilesResult = await this._netSuiteFileCabinetImportService.importFiles({
+								systemDomain,
+								accessToken,
+								projectFolder,
+								filePaths: allReferencedPaths,
+								excludeProperties: false,
+							});
+
+							const results = referencedFilesResult && Array.isArray(referencedFilesResult.results) ? referencedFilesResult.results : [];
+							referencedFileImportResultByPath = new Map(results.map((r) => [normalizeFileCabinetPath(r.path), r]));
+						} catch (error) {
+							const message = error && error.message ? error.message : `${error}`;
+							referencedFileImportResultByPath = new Map(
+								allReferencedPaths.map((p) => [normalizeFileCabinetPath(p), { path: p, loaded: false, message }])
+							);
+						}
+					}
+
 					const successfulImports = [];
 					const failedImports = [];
 					for (const obj of objects) {
 						const status = statusByKey.get(obj.scriptId);
 						const statusType = status && status.type ? `${status.type}` : 'FAILED';
 						const statusMessage = status && status.message ? `${status.message}` : '';
+						const referencedFilePaths = referencedFilesByScriptId.get(obj.scriptId) || referencedFilesByScriptId.get(`${obj.scriptId}`.toLowerCase()) || [];
+						const referencedFileImportResult = { successfulImports: [], failedImports: [] };
+						for (const p of referencedFilePaths) {
+							const normalizedPath = normalizeFileCabinetPath(p);
+							const fileResult = referencedFileImportResultByPath.get(normalizedPath);
+							if (fileResult && fileResult.loaded === true) {
+								referencedFileImportResult.successfulImports.push({ path: normalizedPath });
+							} else {
+								const message = fileResult && fileResult.message ? `${fileResult.message}` : 'Referenced file import failed.';
+								referencedFileImportResult.failedImports.push({ path: normalizedPath, message });
+							}
+						}
 						const entry = {
 							customObject: { type: obj.type, id: obj.scriptId, result: { type: statusType, message: statusMessage } },
-							referencedFileImportResult: { successfulImports: [], failedImports: [] },
+							referencedFileImportResult,
 						};
 
 						if (`${statusType}`.toUpperCase() === 'SUCCESS') {
@@ -1025,6 +1248,51 @@ module.exports = class NodeSdkExecutor {
 			return {
 				status: 'SUCCESS',
 				data: { path: result.absolutePath },
+				errorMessages: [],
+			};
+		} catch (error) {
+			const message = error && error.message ? error.message : `${error}`;
+			return { status: 'ERROR', errorMessages: [message] };
+		}
+	}
+
+	async _addDependencies(executionContext) {
+		const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
+		const flags = (executionContext && executionContext.getFlags && executionContext.getFlags()) || [];
+
+		const projectFolder = CommandUtils.unquoteString(params[PARAMS.PROJECT] || '');
+		if (!projectFolder) {
+			return { status: 'ERROR', errorMessages: ['Missing -project for adddependencies.'] };
+		}
+
+		const all = flags.includes(FLAGS.ALL);
+		const featureRefs = params[PARAMS.FEATURE] ? this._parseQuotedList(params[PARAMS.FEATURE]) : [];
+		const fileRefs = params[PARAMS.FILE] ? this._parseQuotedList(params[PARAMS.FILE]) : [];
+		const objectRefs = params[PARAMS.OBJECT] ? this._parseQuotedList(params[PARAMS.OBJECT]) : [];
+
+		try {
+			const result = await this._projectAddDependenciesService.addDependencies({
+				projectFolder,
+				all,
+				featureRefs,
+				fileRefs,
+				objectRefs,
+			});
+
+			if (!result || result.ok !== true) {
+				return { status: 'ERROR', errorMessages: (result && result.errorMessages) || ['Unable to add dependencies.'] };
+			}
+
+			const added = (result && Array.isArray(result.addedDependencies) && result.addedDependencies) || [];
+			const resultMessage =
+				added.length > 0
+					? `Added ${added.length} dependency reference(s) to manifest.`
+					: 'No unresolved dependencies found.';
+
+			return {
+				status: 'SUCCESS',
+				data: added,
+				resultMessage,
 				errorMessages: [],
 			};
 		} catch (error) {

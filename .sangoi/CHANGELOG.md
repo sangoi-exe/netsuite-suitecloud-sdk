@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-02-11
+- `packages/node-cli`: implementa `account:setup` java-free via SDK command `authenticate` (OAuth2 authorization_code + PKCE), com browser launch, callback local `127.0.0.1:52300-52315` e troca de token em `/services/rest/auth/oauth2/v1/token`.
+- `packages/node-cli`: adiciona `NetSuitePkceAuthService` e suporte a refresh token grant para auth `type: PKCE`.
+- `packages/node-cli`: `refreshauthorization` e `_ensureValidAccessToken` agora suportam `PKCE` além de `CLIENT_CREDENTIALS`.
+- `packages/node-cli`: endurece segurança do store local de auth IDs (`AuthStoreService`) para também tratar `refreshToken` como segredo (strip/encrypt/decrypt).
+- `packages/node-cli`: adiciona cobertura de testes para fluxo PKCE (`NetSuitePkceAuthService`, `authenticate` command, refresh de PKCE em comandos runtime).
+- `packages/node-cli`: corrige `project:adddependencies` para não forçar `-all` quando o usuário passa refs seletivas (`--feature`/`--file`/`--object`).
+- `packages/node-cli`: ajusta precedência de `client_id` no `account:setup` (explícito → env vars → `suitecloud-sdk-settings.json` → default por domínio).
+- `packages/node-cli`: `_ensureValidAccessToken` agora rejeita tipos de auth não suportados mesmo quando há token não expirado.
+
 ## 2025-12-19
 - `packages/node-cli`: remove dependência de Java/JAR e toda a lógica de download/execução do SDK Oracle.
 - `packages/node-cli`: implementa `account:setup:ci`/`account:manageauth` (e `inspectauthorization`/`refreshauthorization`) via engine Node, com store local de auth IDs em `$SUITECLOUD_SDK_HOME/auth/auth-store.json` (tokens criptografados via `SUITECLOUD_CI_PASSKEY`/`SUITECLOUD_FALLBACK_PASSKEY`). `account:setup:ci` agora aceita `--clientid` (ou env `SUITECLOUD_CLIENT_ID`) e normaliza `accountId` `-sb1/-rp1` → `_SB1/_RP1` para `datacenterurls`.
@@ -29,3 +39,5 @@
 - `packages/node-cli`: implementa `object:update` java-free via `/app/ide/ide.nl` (`FetchCustomObjectXml` com `mode=UPDATE`), sobrescrevendo os XMLs no projeto (preserva subpastas existentes sob `Objects/` quando o ZIP vem só com filenames).
 - `packages/node-cli`: implementa `includeinstances` para custom records via `POST /app/ide/fetchcustomrecordwithinstancesxml.nl` (response ZIP) e extração segura para o projeto.
 - `packages/node-cli`: completa `NodeSdkExecutor` para `listobjects`/`importobjects`/`update`/`updatecustomrecordwithinstances` + adiciona/atualiza testes unitários.
+- `packages/node-cli`: `object:import` agora baixa SuiteScripts referenciados para projetos ACP quando importar `customscript*` e o usuário não passa `-excludefiles` (detecta paths no XML importado e chama `ImportFiles`).
+- `packages/node-cli`: implementa `project:adddependencies` java-free via SDK command `adddependencies` (atualiza `manifest.xml` com dependencies descobertas em `Objects/` e features comuns).

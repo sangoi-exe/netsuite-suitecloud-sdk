@@ -131,13 +131,15 @@ module.exports = class AuthStoreService {
 			return record;
 		}
 		const copy = { ...record };
-		if (copy.token && copy.token.accessToken) {
+		if (copy.token && (copy.token.accessToken || copy.token.refreshToken)) {
 			copy.token = { ...copy.token };
 			delete copy.token.accessToken;
+			delete copy.token.refreshToken;
 		}
-		if (copy.token && copy.token.accessTokenEnc) {
+		if (copy.token && (copy.token.accessTokenEnc || copy.token.refreshTokenEnc)) {
 			copy.token = { ...copy.token };
 			delete copy.token.accessTokenEnc;
+			delete copy.token.refreshTokenEnc;
 		}
 		return copy;
 	}
@@ -147,15 +149,22 @@ module.exports = class AuthStoreService {
 		const key = passkey ? deriveKeyFromPasskey(passkey) : null;
 
 		const copy = { ...record };
-		if (copy.token && copy.token.accessToken) {
+		if (copy.token && (copy.token.accessToken || copy.token.refreshToken)) {
 			if (!key) {
-				// No passkey configured: do not persist raw access tokens.
+				// No passkey configured: do not persist raw OAuth tokens.
 				copy.token = { ...copy.token };
 				delete copy.token.accessToken;
+				delete copy.token.refreshToken;
 			} else {
 				copy.token = { ...copy.token };
-				copy.token.accessTokenEnc = encrypt(copy.token.accessToken, key);
+				if (copy.token.accessToken) {
+					copy.token.accessTokenEnc = encrypt(copy.token.accessToken, key);
+				}
+				if (copy.token.refreshToken) {
+					copy.token.refreshTokenEnc = encrypt(copy.token.refreshToken, key);
+				}
 				delete copy.token.accessToken;
+				delete copy.token.refreshToken;
 			}
 		}
 		return copy;
@@ -169,16 +178,20 @@ module.exports = class AuthStoreService {
 			return record;
 		}
 		const copy = { ...record };
-		if (copy.token && copy.token.accessTokenEnc) {
+		if (copy.token && (copy.token.accessTokenEnc || copy.token.refreshTokenEnc)) {
 			if (!key) {
 				throw new Error(
 					`Credentials for authId require a passkey. Set ${ENV_VARS.SUITECLOUD_CI_PASSKEY} or ${ENV_VARS.SUITECLOUD_FALLBACK_PASSKEY}.`
 				);
 			}
 			copy.token = { ...copy.token };
-			copy.token.accessToken = decrypt(copy.token.accessTokenEnc, key);
+			if (copy.token.accessTokenEnc) {
+				copy.token.accessToken = decrypt(copy.token.accessTokenEnc, key);
+			}
+			if (copy.token.refreshTokenEnc) {
+				copy.token.refreshToken = decrypt(copy.token.refreshTokenEnc, key);
+			}
 		}
 		return copy;
 	}
 };
-
