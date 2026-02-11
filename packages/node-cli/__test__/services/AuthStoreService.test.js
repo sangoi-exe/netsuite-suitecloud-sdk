@@ -33,20 +33,29 @@ describe('AuthStoreService', () => {
 			type: 'CLIENT_CREDENTIALS',
 			accountInfo: { companyName: 'ACME', companyId: '123', roleName: 'Role' },
 			hostInfo: { hostName: 'system.example.com' },
-			token: { accessToken: 'secret-token', expiresAt: '2099-01-01T00:00:00.000Z' },
+			token: {
+				accessToken: 'secret-token',
+				refreshToken: 'secret-refresh-token',
+				expiresAt: '2099-01-01T00:00:00.000Z',
+			},
 		});
 
 		const raw = JSON.parse(fs.readFileSync(store.getStorePath(), 'utf8'));
 		expect(raw.authIds.auth1.token.accessTokenEnc).toBeTruthy();
+		expect(raw.authIds.auth1.token.refreshTokenEnc).toBeTruthy();
 		expect(raw.authIds.auth1.token.accessToken).toBeUndefined();
+		expect(raw.authIds.auth1.token.refreshToken).toBeUndefined();
 
 		const publicRecord = store.get('auth1');
 		expect(publicRecord.token.accessTokenEnc).toBeUndefined();
+		expect(publicRecord.token.refreshTokenEnc).toBeUndefined();
 		expect(publicRecord.token.accessToken).toBeUndefined();
+		expect(publicRecord.token.refreshToken).toBeUndefined();
 		expect(publicRecord.token.expiresAt).toBe('2099-01-01T00:00:00.000Z');
 
 		const hydrated = store.getWithSecrets('auth1');
 		expect(hydrated.token.accessToken).toBe('secret-token');
+		expect(hydrated.token.refreshToken).toBe('secret-refresh-token');
 	});
 
 	test('rename and remove operate on auth IDs', () => {
@@ -66,4 +75,3 @@ describe('AuthStoreService', () => {
 		expect(store.get('auth2')).toBeNull();
 	});
 });
-

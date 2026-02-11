@@ -14,7 +14,7 @@ CLI for Node.js is an interactive tool that guides you through all the steps of 
 ## Prerequisites
 The following software is required to work with SuiteCloud CLI for Node.js:
 - Node.js version 22 LTS
-- Java is **not required** in this fork (java-free implementation in progress).
+- Java is **not required** in this fork.
 
 Read the full list of prerequisites in [SuiteCloud CLI for Node.js Installation Prerequisites](https://docs.oracle.com/en/cloud/saas/netsuite/ns-online-help/section_1558708810.html).
 
@@ -37,8 +37,9 @@ npm install -g @oracle/suitecloud-cli
 CLI for Node.js is available from within any directory by running `suitecloud`.
 
 ## Fork notes (java-free)
-This fork is migrating away from Oracle's Java-based SDK and is intended to run **without Java/JAR**.
+This fork runs **without Java/JAR** and reimplements SDK behavior in Node.js.
 Currently implemented in the Node engine:
+- `account:setup` (browser OAuth2 authorization-code + PKCE; local callback on `127.0.0.1:52300-52315`)
 - `account:setup:ci` (OAuth2 client_credentials; stores auth ID locally)
 - `account:manageauth` (list/info/rename/remove local auth IDs)
 - `project:create` (project skeleton + templates)
@@ -55,17 +56,15 @@ Currently implemented in the Node engine:
 - `object:import` (downloads SDF custom objects via `ide.nl` FetchCustomObjectXml; writes under `Objects/`)
 - `object:update` (overwrites existing SDF custom objects via `FetchCustomObjectXml` `mode=UPDATE`; for custom records, supports `includeinstances` via `fetchcustomrecordwithinstancesxml.nl`)
 
-Not implemented yet (still blocked on protocol parity / incomplete coverage):
-- `account:setup` (browser-based OAuth)
-
 Global flags:
 - `--debug`: prints stack traces and extra diagnostics on failures
 - `--verbose`: prints per-command timings
 
 Environment variables:
 - `SUITECLOUD_SDK_HOME`: overrides the SDK cache folder (default: `~/.suitecloud-sdk`)
-- `SUITECLOUD_CI_PASSKEY` / `SUITECLOUD_FALLBACK_PASSKEY`: encryption passkey for tokens stored in `$SUITECLOUD_SDK_HOME/auth/auth-store.json` (required for `account:setup:ci`)
-- `SUITECLOUD_CLIENT_ID`: OAuth2 client id (Integration record) used by `account:setup:ci` if `--clientid` is not provided
+- `SUITECLOUD_CI_PASSKEY` / `SUITECLOUD_FALLBACK_PASSKEY`: encryption passkey for tokens stored in `$SUITECLOUD_SDK_HOME/auth/auth-store.json` (required for persistent OAuth tokens)
+- `SUITECLOUD_INTEGRATION_CLIENT_ID` / `SUITECLOUD_OAUTH_CLIENT_ID`: optional integration client id override for browser `account:setup` (otherwise CLI uses SDK settings/default integration record per domain type)
+- `SUITECLOUD_CLIENT_ID`: OAuth2 client id (Integration record) used by `account:setup:ci` if `--clientid` is not provided; also used as low-priority fallback by browser `account:setup`
 - `SUITECLOUD_SCOPE` / `SUITECLOUD_SCOPES` / `NS_SCOPES`: OAuth2 scopes for `account:setup:ci` (default: `rest_webservices`). For server deploy/validate, include `restlets` (example: `"rest_webservices restlets"`).
 - `SUITECLOUD_PROXY`: proxy URL for outbound HTTP(S) requests
 - `SUITECLOUD_HTTP_TRACE`: logs sanitized HTTP request/response metadata to stderr (JSONL)
@@ -129,6 +128,11 @@ suitecloud project:create -i
 ```
 
 After you create a project, configure a NetSuite account, by running the following command within the project folder:
+```
+suitecloud account:setup
+```
+
+For CI/machine-to-machine authentication:
 ```
 suitecloud account:setup:ci --account <ACCOUNT_ID> --authid <AUTH_ID> --clientid <CLIENT_ID> --certificateid <CERTIFICATE_ID> --privatekeypath <PATH_TO_PRIVATE_KEY_PEM> --scope "rest_webservices restlets"
 ```

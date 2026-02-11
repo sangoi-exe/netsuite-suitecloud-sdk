@@ -34,11 +34,12 @@ module.exports = class AddDependenciesAction extends BaseAction {
 
 	async execute(params) {
 		try {
-			const executionContext = SdkExecutionContext.Builder.forCommand(this._commandMetadata.sdkCommand)
-				.integration()
-				.addParams(params)
-				.addFlag(COMMAND_OPTIONS.ALL)
-				.build();
+			const executionContextBuilder = SdkExecutionContext.Builder.forCommand(this._commandMetadata.sdkCommand).integration().addParams(params);
+			const shouldRunAll = params[COMMAND_OPTIONS.ALL] === true || params[COMMAND_OPTIONS.ALL] === 'true';
+			if (shouldRunAll) {
+				executionContextBuilder.addFlag(COMMAND_OPTIONS.ALL);
+			}
+			const executionContext = executionContextBuilder.build();
 
 			const operationResult = await executeWithSpinner({
 				action: this._sdkExecutor.execute(executionContext),

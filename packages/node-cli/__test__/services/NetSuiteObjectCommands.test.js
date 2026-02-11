@@ -210,6 +210,104 @@ describe('NodeSdkExecutor listobjects/importobjects', () => {
 		}
 	});
 
+	test('importobjects imports referenced SuiteScript files for ACP customscript* when not using -excludefiles', async () => {
+		process.env[ENV_VARS.SUITECLOUD_CI_PASSKEY] = 'test-passkey';
+
+		const projectFolder = mkTempDir();
+		writeManifestAcp(projectFolder);
+		fs.mkdirSync(path.join(projectFolder, 'Objects'), { recursive: true });
+
+		const objectStatusXml =
+			'<status>' +
+			'<result><key>customscript_test</key><type>SUCCESS</type><message></message></result>' +
+			'</status>';
+		const objectZip = await zipBuffer([
+			{ name: 'customscript_test.xml', content: '<script><scriptfile>/SuiteScripts/test.js</scriptfile></script>' },
+			{ name: 'status.xml', content: objectStatusXml },
+		]);
+
+		const fileStatusXml =
+			'<status>' +
+			'<result><path>/SuiteScripts/test.js</path><loaded>true</loaded><message></message></result>' +
+			'</status>';
+		const fileZip = await zipBuffer([
+			{ name: 'FileCabinet/SuiteScripts/test.js', content: "console.log('ok')\n" },
+			{ name: 'status.xml', content: fileStatusXml },
+		]);
+
+		let sawImportObjects = false;
+		let sawImportFiles = false;
+
+		const server = http.createServer((req, res) => {
+			if (req.method === 'POST' && req.url === '/app/ide/ide.nl') {
+				const chunks = [];
+				req.on('data', (c) => chunks.push(c));
+				req.on('end', () => {
+					expect(req.headers.authorization).toBe('Bearer abc');
+					const body = Buffer.concat(chunks).toString('utf8');
+
+					if (body.includes('FetchCustomObjectXml')) {
+						sawImportObjects = true;
+						expect(body).toContain('scriptId="customscript_test"');
+						res.writeHead(200, { 'content-type': 'application/octet-stream' });
+						res.end(objectZip);
+						return;
+					}
+
+					if (body.includes('ImportFiles')) {
+						sawImportFiles = true;
+						expect(body).toContain('<path>/SuiteScripts/test.js</path>');
+						res.writeHead(200, { 'content-type': 'application/octet-stream' });
+						res.end(fileZip);
+						return;
+					}
+
+					res.writeHead(500, { 'content-type': 'text/plain' });
+					res.end('unexpected action');
+				});
+				return;
+			}
+
+			res.writeHead(404, { 'content-type': 'text/plain' });
+			res.end('not found');
+		});
+
+		await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+		const baseUrl = `http://127.0.0.1:${server.address().port}`;
+
+		const sdkHome = mkTempDir();
+		const store = new AuthStoreService(sdkHome);
+		store.upsert('auth1', {
+			type: 'CLIENT_CREDENTIALS',
+			accountInfo: { companyName: 'ACME', companyId: 'TEST', roleName: 'Role' },
+			hostInfo: { hostName: '127.0.0.1' },
+			domains: { restDomain: baseUrl, systemDomain: baseUrl, webservicesDomain: baseUrl },
+			authConfig: { accountId: 'TEST', certificateId: 'cert123', privateKeyPath: '/dev/null', domain: baseUrl, scope: 'rest_webservices' },
+			token: { accessToken: 'abc', expiresAt: '2099-01-01T00:00:00.000Z', tokenType: 'Bearer' },
+		});
+
+		try {
+			const executor = new NodeSdkExecutor(sdkHome);
+			const ctx = SdkExecutionContext.Builder.forCommand('importobjects')
+				.integration()
+				.addParam('authid', 'auth1')
+				.addParam('project', projectFolder)
+				.addParam('destinationfolder', '/Objects')
+				.addParam('type', 'advancedrevrecplugin')
+				.addParam('scriptid', 'customscript_test')
+				.build();
+
+			const result = await executor.execute(ctx);
+			expect(sawImportObjects).toBe(true);
+			expect(sawImportFiles).toBe(true);
+			expect(result.status).toBe('SUCCESS');
+			expect(result.data.successfulImports[0].referencedFileImportResult.successfulImports).toEqual([{ path: '/SuiteScripts/test.js' }]);
+			expect(fs.existsSync(path.join(projectFolder, 'FileCabinet', 'SuiteScripts', 'test.js'))).toBe(true);
+		} finally {
+			await new Promise((resolve) => server.close(resolve));
+		}
+	});
+
 	test('update overwrites objects via FetchCustomObjectXml mode=UPDATE (preserves existing subfolders)', async () => {
 		process.env[ENV_VARS.SUITECLOUD_CI_PASSKEY] = 'test-passkey';
 
