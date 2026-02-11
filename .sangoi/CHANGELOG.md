@@ -9,6 +9,10 @@
 - `packages/node-cli`: corrige `project:adddependencies` para não forçar `-all` quando o usuário passa refs seletivas (`--feature`/`--file`/`--object`).
 - `packages/node-cli`: ajusta precedência de `client_id` no `account:setup` (explícito → env vars → `suitecloud-sdk-settings.json` → default por domínio).
 - `packages/node-cli`: `_ensureValidAccessToken` agora rejeita tipos de auth não suportados mesmo quando há token não expirado.
+- `packages/node-cli`: externaliza mensagens de erro OAuth/PKCE para `TranslationKeys` + `messages.json` (browser launch, timeout, callback, exchange/refresh failures), removendo hardcoded strings do serviço PKCE.
+- `packages/node-cli`: `project:adddependencies -all` agora cobre categorias adicionais inferidas por qualifiers (`bundles`, `files`, `folders`, `platformextensions`) com merge/dedupe/idempotência em `manifest.xml`.
+- `packages/node-cli`: `project:adddependencies -all` deixa de materializar `platformextensions` para o próprio SuiteApp (`appid` igual ao `selfAppId`), mantendo comportamento consistente com o filtro já aplicado para objetos de aplicação.
+- `packages/node-cli`: `AddDependenciesOutputHandler` passa a renderizar dependências de `BUNDLE`.
 
 ## 2025-12-19
 - `packages/node-cli`: remove dependência de Java/JAR e toda a lógica de download/execução do SDK Oracle.

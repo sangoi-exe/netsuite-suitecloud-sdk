@@ -14,6 +14,8 @@ const { URL } = require('url');
 
 const HttpClient = require('../http/HttpClient');
 const NetSuiteDomainsService = require('./NetSuiteDomainsService');
+const NodeTranslationService = require('../NodeTranslationService');
+const { UTILS } = require('../TranslationKeys');
 const { DOMAIN, FILES } = require('../../ApplicationConstants');
 
 const CALLBACK_HOST = '127.0.0.1';
@@ -112,6 +114,10 @@ function parseOAuthErrorPayload(response) {
 	return { code, description };
 }
 
+function createTranslatedError(messageKey, ...params) {
+	return new Error(NodeTranslationService.getMessage(messageKey, ...params));
+}
+
 function openInDefaultBrowser(url) {
 	assert(url);
 
@@ -132,7 +138,7 @@ function openInDefaultBrowser(url) {
 		const child = spawn(command, args, { stdio: 'ignore', detached: process.platform !== 'win32' });
 		child.once('error', (error) => {
 			const message = error && error.message ? error.message : `${error}`;
-			reject(new Error(`Unable to launch browser for OAuth authorization (${command}): ${message}`));
+			reject(createTranslatedError(UTILS.AUTHENTICATION.OAUTH_BROWSER_LAUNCH_FAILED, command, message));
 		});
 		child.once('spawn', () => {
 			child.unref();
@@ -155,7 +161,7 @@ function resolveClientIdFromSettings(sdkPath) {
 		settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
 	} catch (error) {
 		const message = error && error.message ? error.message : `${error}`;
-		throw new Error(`Invalid SDK settings file "${settingsPath}": ${message}`);
+		throw createTranslatedError(UTILS.AUTHENTICATION.OAUTH_INVALID_SDK_SETTINGS, settingsPath, message);
 	}
 
 	const configuredClientId = settings && settings.integrationClientId ? `${settings.integrationClientId}`.trim() : '';
@@ -188,7 +194,7 @@ function toRedirectUri(port) {
 
 function createTimeoutError(timeoutMs) {
 	const seconds = Math.ceil(timeoutMs / 1000);
-	return new Error(`OAuth authorization timed out after ${seconds}s. Retry "suitecloud account:setup".`);
+	return createTranslatedError(UTILS.AUTHENTICATION.OAUTH_TIMEOUT, seconds);
 }
 
 module.exports = class NetSuitePkceAuthService {
@@ -266,13 +272,13 @@ module.exports = class NetSuitePkceAuthService {
 		const refreshToken = `${options.refreshToken || ''}`.trim();
 
 		if (!accountId) {
-			throw new Error('Missing accountId for PKCE token refresh.');
+			throw createTranslatedError(UTILS.AUTHENTICATION.OAUTH_REFRESH_MISSING_ACCOUNT_ID);
 		}
 		if (!clientId) {
-			throw new Error('Missing clientId for PKCE token refresh.');
+			throw createTranslatedError(UTILS.AUTHENTICATION.OAUTH_REFRESH_MISSING_CLIENT_ID);
 		}
 		if (!refreshToken) {
-			throw new Error('Missing refresh token for PKCE reauthorization. Re-run "suitecloud account:setup".');
+			throw createTranslatedError(UTILS.AUTHENTICATION.OAUTH_REFRESH_MISSING_TOKEN);
 		}
 
 		const domains = await this._resolveDomainsForRefresh(options, accountId);
@@ -287,12 +293,19 @@ module.exports = class NetSuitePkceAuthService {
 		if (tokenResponse.statusCode < 200 || tokenResponse.statusCode >= 300) {
 			const { code, description } = parseOAuthErrorPayload(tokenResponse);
 			const suffix = code ? ` (${code})` : '';
-			throw new Error(`OAuth refresh request failed${suffix}: ${description || tokenResponse.text}`);
+			throw createTranslatedError(
+				UTILS.AUTHENTICATION.OAUTH_REFRESH_REQUEST_FAILED,
+				suffix,
+				description || tokenResponse.text
+			);
 		}
 
 		const tokenData = tokenResponse.data || {};
 		if (!tokenData.access_token) {
-			throw new Error(`OAuth refresh response missing access_token: ${JSON.stringify(tokenData)}`);
+			throw createTranslatedError(
+				UTILS.AUTHENTICATION.OAUTH_REFRESH_RESPONSE_MISSING_ACCESS_TOKEN,
+				JSON.stringify(tokenData)
+			);
 		}
 
 		const expiresIn = Number(tokenData.expires_in || 0);
@@ -365,12 +378,19 @@ module.exports = class NetSuitePkceAuthService {
 		if (tokenResponse.statusCode < 200 || tokenResponse.statusCode >= 300) {
 			const { code: errorCode, description } = parseOAuthErrorPayload(tokenResponse);
 			const suffix = errorCode ? ` (${errorCode})` : '';
-			throw new Error(`OAuth authorization-code token request failed${suffix}: ${description || tokenResponse.text}`);
+			throw createTranslatedError(
+				UTILS.AUTHENTICATION.OAUTH_AUTHORIZATION_CODE_REQUEST_FAILED,
+				suffix,
+				description || tokenResponse.text
+			);
 		}
 
 		const tokenData = tokenResponse.data || {};
 		if (!tokenData.access_token) {
-			throw new Error(`OAuth token response missing access_token: ${JSON.stringify(tokenData)}`);
+			throw createTranslatedError(
+				UTILS.AUTHENTICATION.OAUTH_AUTHORIZATION_CODE_RESPONSE_MISSING_ACCESS_TOKEN,
+				JSON.stringify(tokenData)
+			);
 		}
 
 		const accessToken = tokenData.access_token;
@@ -410,22 +430,22 @@ module.exports = class NetSuitePkceAuthService {
 		const errorDescription = callbackParams.error_description ? `${callbackParams.error_description}`.trim() : '';
 		if (errorCode) {
 			const suffix = errorDescription ? `: ${errorDescription}` : '';
-			throw new Error(`OAuth authorization failed (${errorCode})${suffix}`);
+			throw createTranslatedError(UTILS.AUTHENTICATION.OAUTH_AUTHORIZATION_FAILED, errorCode, suffix);
 		}
 
 		const state = callbackParams.state ? `${callbackParams.state}`.trim() : '';
 		if (!state || state !== expectedState) {
-			throw new Error('OAuth authorization callback state mismatch. Retry "suitecloud account:setup".');
+			throw createTranslatedError(UTILS.AUTHENTICATION.OAUTH_STATE_MISMATCH);
 		}
 
 		const code = callbackParams.code ? `${callbackParams.code}`.trim() : '';
 		if (!code) {
-			throw new Error('OAuth authorization callback did not provide an authorization code.');
+			throw createTranslatedError(UTILS.AUTHENTICATION.OAUTH_CALLBACK_MISSING_CODE);
 		}
 
 		const accountId = callbackParams.company ? `${callbackParams.company}`.trim() : '';
 		if (!accountId) {
-			throw new Error('OAuth authorization callback did not provide account information ("company").');
+			throw createTranslatedError(UTILS.AUTHENTICATION.OAUTH_CALLBACK_MISSING_COMPANY);
 		}
 		return accountId;
 	}
@@ -444,7 +464,12 @@ module.exports = class NetSuitePkceAuthService {
 			}
 		}
 		const suffix = lastError && lastError.message ? ` (${lastError.message})` : '';
-		throw new Error(`Unable to start local OAuth callback server on ports ${PORT_RANGE_MIN}-${PORT_RANGE_MAX}${suffix}.`);
+		throw createTranslatedError(
+			UTILS.AUTHENTICATION.OAUTH_CALLBACK_SERVER_UNAVAILABLE,
+			PORT_RANGE_MIN,
+			PORT_RANGE_MAX,
+			suffix
+		);
 	}
 
 	async _startCallbackServerOnPort({ port, expectedState }) {
