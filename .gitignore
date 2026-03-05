@@ -3,6 +3,7 @@
 
 # local operational workspace
 .sangoi/
+.refs/
 
 # ide
 **/.idea/**
