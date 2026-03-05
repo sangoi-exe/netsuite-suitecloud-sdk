@@ -7,7 +7,7 @@ Java-free SuiteCloud CLI fork for Linux/WSL, with Node-only runtime and npm dist
 [![node](https://img.shields.io/badge/node-22%20LTS-339933)](https://nodejs.org/)
 [![runtime](https://img.shields.io/badge/runtime-node--only-blue)](./packages/node-cli/src/core/sdkexecutor/NodeSdkExecutor.js)
 
-Quick links: [Get Started](#get-started) - [Install](#install) - [Publish to npmjs](#publish-to-npmjs) - [Command Coverage](#command-coverage) - [Development](#development)
+Quick links: [Get Started](#get-started) - [Install](#install) - [Versioning Scheme](#versioning-scheme) - [Publish to npmjs](#publish-to-npmjs) - [Command Coverage](#command-coverage) - [Development](#development)
 
 > [!IMPORTANT]
 > Status: production-tested in WSL with browser `account:setup` + `project:deploy` working in Node-only flow.
@@ -16,6 +16,7 @@ Quick links: [Get Started](#get-started) - [Install](#install) - [Publish to npm
 
 - [Get Started](#get-started)
 - [Install](#install)
+- [Versioning Scheme](#versioning-scheme)
 - [Publish to npmjs](#publish-to-npmjs)
 - [Command Coverage](#command-coverage)
 - [Development](#development)
@@ -49,6 +50,19 @@ npm pack
 npm install -g ./sangoi-exe-suitecloud-cli-fullnode-*.tgz
 suitecloud --version
 ```
+
+## Versioning Scheme
+
+This fork uses a semver-compatible format:
+
+`<fork_major>.<fork_minor>.<netsuite_year>-<netsuite_release>.<upstream_cli_compact>`
+
+Current release:
+
+- `1.0.2026-1.302`
+- `1.0` = fork package version
+- `2026-1` = NetSuite line `2026.1`
+- `302` = upstream SuiteCloud CLI baseline `3.0.2`
 
 ## Publish to npmjs
 
