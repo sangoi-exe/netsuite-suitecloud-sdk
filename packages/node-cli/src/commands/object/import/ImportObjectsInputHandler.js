@@ -64,7 +64,7 @@ module.exports = class ImportObjectsInputHandler extends BaseInputHandler {
 		this._fileSystemService = new FileSystemService();
 		const commandsMetadataService = new CommandsMetadataService();
 		this._listObjectsMetadata = commandsMetadataService.getCommandMetadataByName(LIST_OBJECTS_COMMAND_NAME);
-		this._authId = getProjectDefaultAuthId(this._executionPath);
+		this._authId = getProjectDefaultAuthId(this._projectFolder);
 	}
 
 	async getParameters(params) {
@@ -293,7 +293,7 @@ module.exports = class ImportObjectsInputHandler extends BaseInputHandler {
 	}
 
 	_arrangeAnswersForListObjects(answers) {
-		answers[ANSWERS_NAMES.AUTH_ID] = getProjectDefaultAuthId(this._executionPath);
+		answers[ANSWERS_NAMES.AUTH_ID] = getProjectDefaultAuthId(this._projectFolder);
 		if (answers[ANSWERS_NAMES.SPECIFY_OBJECT_TYPE]) {
 			answers[ANSWERS_NAMES.OBJECT_TYPE] = answers[ANSWERS_NAMES.TYPE_CHOICES_ARRAY].join(' ');
 		}

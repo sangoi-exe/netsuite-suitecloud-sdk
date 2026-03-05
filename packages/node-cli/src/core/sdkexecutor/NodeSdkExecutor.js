@@ -232,16 +232,25 @@ module.exports = class NodeSdkExecutor {
 		const params = (executionContext && executionContext.getParams && executionContext.getParams()) || {};
 		const authId = params[PARAMS.AUTH_ID];
 		const domain = params[PARAMS.URL] ? CommandUtils.unquoteString(params[PARAMS.URL]) : null;
+		const clientId = params[PARAMS.CLIENT_ID] ? CommandUtils.unquoteString(params[PARAMS.CLIENT_ID]) : null;
+		const scope = params[PARAMS.SCOPE] ? CommandUtils.unquoteString(params[PARAMS.SCOPE]) : null;
 
 		if (!authId) {
 			return { status: 'ERROR', errorMessages: ['Missing required parameter -authid for authenticate.'] };
 		}
 
 		try {
-			const authResult = await this._pkceAuthService.authenticate({
+			const authOptions = {
 				sdkPath: this._sdkPath,
 				domain,
-			});
+			};
+			if (clientId) {
+				authOptions.clientId = clientId;
+			}
+			if (scope) {
+				authOptions.scope = scope;
+			}
+			const authResult = await this._pkceAuthService.authenticate(authOptions);
 
 			const now = new Date().toISOString();
 			this._authStoreService.upsert(authId, {

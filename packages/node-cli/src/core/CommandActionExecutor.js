@@ -53,7 +53,7 @@ module.exports = class CommandActionExecutor {
 			const projectFolder = this._cliConfigurationService.getProjectFolder(commandName);
 			commandUserExtension = this._cliConfigurationService.getCommandUserExtension(commandName);
 			const runInInteractiveMode = context.runInInteractiveMode;
-			const defaultAuthId = commandMetadata.isSetupRequired ? getProjectDefaultAuthId(this._executionPath) : null;
+			const defaultAuthId = commandMetadata.isSetupRequired ? getProjectDefaultAuthId(projectFolder) : null;
 
 			this._checkCanExecuteCommand({ runInInteractiveMode, commandMetadata, defaultAuthId });
 
@@ -209,7 +209,9 @@ module.exports = class CommandActionExecutor {
 	}
 
 	_applyDefaultContextParams(args, defaultAuthId) {
-		args.authid = defaultAuthId;
+		if (!args.authid) {
+			args.authid = defaultAuthId;
+		}
 		return args;
 	}
 };

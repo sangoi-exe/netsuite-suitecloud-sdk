@@ -100,7 +100,7 @@ describe('NetSuitePkceAuthService', () => {
 
 					expect(parsed.pathname).toBe('/app/login/oauth2/authorize.nl');
 					expect(parsed.searchParams.get('code_challenge_method')).toBe('S256');
-					expect(parsed.searchParams.get('scope')).toBe('rest_webservices');
+					expect(parsed.searchParams.get('scope')).toBe('restlets');
 					expect(state).toBeTruthy();
 					expect(redirectUri).toMatch(/^http:\/\/127\.0\.0\.1:52\d{3}\/suitecloud-auth$/);
 
@@ -132,6 +132,59 @@ describe('NetSuitePkceAuthService', () => {
 		} finally {
 			await new Promise((resolve) => server.close(resolve));
 		}
+	});
+
+	test('includes scope in authorize URL when explicitly provided', async () => {
+		let authorizeUrlSeen;
+		const service = new NetSuitePkceAuthService({
+			openBrowser: async (authorizeUrl) => {
+				authorizeUrlSeen = authorizeUrl;
+			},
+		});
+		service._startCallbackServer = jest.fn(async () => ({
+			port: 52300,
+			waitForCallback: async () => {
+				const state = new URL(authorizeUrlSeen).searchParams.get('state');
+				return { code: 'oauth-code-123', company: '12345_SB1', state };
+			},
+			close: async () => {},
+		}));
+		service._domainsService = {
+			resolveDomains: jest.fn(async () => ({
+				restDomain: 'https://12345.suitetalk.api.netsuite.com',
+				systemDomain: 'https://12345.app.netsuite.com',
+				webservicesDomain: 'https://12345.suitetalk.api.netsuite.com',
+				hostInfo: { hostName: '12345.app.netsuite.com' },
+			})),
+		};
+		service._httpClient = {
+			requestForm: jest.fn(async () => ({
+				statusCode: 200,
+				data: {
+					access_token: 'pkce-access-token',
+					refresh_token: 'pkce-refresh-token',
+					expires_in: 3600,
+					token_type: 'Bearer',
+				},
+			})),
+			requestJson: jest.fn(async () => ({
+				statusCode: 200,
+				data: {
+					companyName: 'ACME Inc.',
+					companyId: '12345_SB1',
+					roleName: 'Administrator',
+				},
+			})),
+		};
+
+		await service.authenticate({
+			domain: 'https://system.netsuite.com',
+			clientId: 'integration-client-id',
+			scope: 'rest_webservices restlets',
+			timeoutMs: 5000,
+		});
+
+		expect(new URL(authorizeUrlSeen).searchParams.get('scope')).toBe('rest_webservices restlets');
 	});
 
 	test('fails on callback state mismatch', async () => {

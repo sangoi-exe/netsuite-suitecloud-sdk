@@ -35,18 +35,21 @@ const COMMAND = {
 module.exports = class DeployInputHandler extends BaseInputHandler {
 	constructor(options) {
 		super(options);
-
-		this._projectInfoService = new ProjectInfoService(this._projectFolder);
-		this._projectType = this._projectInfoService.getProjectType();
 	}
 
 	async getParameters(params) {
-		const isSuiteAppProject = this._projectType === PROJECT_SUITEAPP;
-		const isACProject = this._projectType === PROJECT_ACP;
+		const selectedProjectFolder = params[COMMAND.OPTIONS.PROJECT]
+			? CommandUtils.unquoteString(params[COMMAND.OPTIONS.PROJECT])
+			: this._projectFolder;
+		const projectInfoService = new ProjectInfoService(selectedProjectFolder);
+		const projectType = projectInfoService.getProjectType();
+
+		const isSuiteAppProject = projectType === PROJECT_SUITEAPP;
+		const isACProject = projectType === PROJECT_ACP;
 
 		const answers = await prompt([
 			{
-				when: isSuiteAppProject && this._projectInfoService.hasLockAndHideFiles(),
+				when: isSuiteAppProject && projectInfoService.hasLockAndHideFiles(),
 				type: CommandUtils.INQUIRER_TYPES.LIST,
 				name: COMMAND.FLAGS.APPLY_INSTALLATION_PREFERENCES,
 				message: NodeTranslationService.getMessage(QUESTIONS.APPLY_INSTALLATION_PREFERENCES),
@@ -93,7 +96,7 @@ module.exports = class DeployInputHandler extends BaseInputHandler {
 				)
 			);
 		}
-		answers[COMMAND.OPTIONS.PROJECT] = this._projectFolder;
+		answers[COMMAND.OPTIONS.PROJECT] = selectedProjectFolder;
 
 		return answers;
 	}

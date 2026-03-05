@@ -1,6 +1,9 @@
 # dependencies
 **/node_modules/**
 
+# local operational workspace
+.sangoi/
+
 # ide
 **/.idea/**
 **/.vscode/**

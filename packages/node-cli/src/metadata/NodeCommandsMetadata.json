@@ -6,11 +6,27 @@
 		"isSetupRequired": false,
 		"forceInteractiveMode": true,
 		"options": {
+			"clientid": {
+				"name": "clientid",
+				"option": "clientid",
+				"description": "References the OAuth2 client ID (Integration record) used for browser-based PKCE authentication. If omitted, set SUITECLOUD_CLIENT_ID env var.",
+				"type": "SINGLE",
+				"mandatory": false,
+				"disableInIntegrationMode": false
+			},
 			"dev": {
 				"name": "dev",
 				"alias": "d",
 				"description": "It only needs to be specified if you want to use a customized NetSuite domain.",
 				"type": "FLAG",
+				"mandatory": false,
+				"disableInIntegrationMode": false
+			},
+			"scope": {
+				"name": "scope",
+				"option": "scope",
+				"description": "OAuth2 scopes requested for browser-based PKCE authentication (space-separated). For SDF handlers include restlets (example: \"rest_webservices restlets\").",
+				"type": "SINGLE",
 				"mandatory": false,
 				"disableInIntegrationMode": false
 			}

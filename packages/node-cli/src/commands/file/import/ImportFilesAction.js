@@ -42,7 +42,7 @@ module.exports = class ImportFilesAction extends BaseAction {
 	preExecute(params) {
 		const { PROJECT, PATHS, EXCLUDE_PROPERTIES, AUTH_ID } = COMMAND_OPTIONS;
 		params[PROJECT] = CommandUtils.quoteString(this._projectFolder);
-		params[AUTH_ID] = getProjectDefaultAuthId(this._executionPath);
+		params[AUTH_ID] = getProjectDefaultAuthId(this._projectFolder);
 		if (params.hasOwnProperty(PATHS)) {
 			if (Array.isArray(params[PATHS])) {
 				params[PATHS] = params[PATHS].map(CommandUtils.quoteString).join(' ');

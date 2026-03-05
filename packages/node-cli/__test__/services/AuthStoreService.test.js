@@ -74,4 +74,38 @@ describe('AuthStoreService', () => {
 		expect(removed).toBe(true);
 		expect(store.get('auth2')).toBeNull();
 	});
+
+	test('persists and hydrates plain tokens when passkey is not set', () => {
+		delete process.env[ENV_VARS.SUITECLOUD_CI_PASSKEY];
+		delete process.env[ENV_VARS.SUITECLOUD_FALLBACK_PASSKEY];
+
+		const tmp = mkTempDir();
+		const store = new AuthStoreService(tmp);
+
+		store.upsert('auth1', {
+			type: 'PKCE',
+			accountInfo: { companyName: 'ACME', companyId: '123', roleName: 'Role' },
+			hostInfo: { hostName: 'system.example.com' },
+			token: {
+				accessToken: 'plain-access-token',
+				refreshToken: 'plain-refresh-token',
+				expiresAt: '2099-01-01T00:00:00.000Z',
+			},
+		});
+
+		const raw = JSON.parse(fs.readFileSync(store.getStorePath(), 'utf8'));
+		expect(raw.authIds.auth1.token.accessToken).toBe('plain-access-token');
+		expect(raw.authIds.auth1.token.refreshToken).toBe('plain-refresh-token');
+		expect(raw.authIds.auth1.token.accessTokenEnc).toBeUndefined();
+		expect(raw.authIds.auth1.token.refreshTokenEnc).toBeUndefined();
+
+		const publicRecord = store.get('auth1');
+		expect(publicRecord.token.accessToken).toBeUndefined();
+		expect(publicRecord.token.refreshToken).toBeUndefined();
+		expect(publicRecord.token.expiresAt).toBe('2099-01-01T00:00:00.000Z');
+
+		const hydrated = store.getWithSecrets('auth1');
+		expect(hydrated.token.accessToken).toBe('plain-access-token');
+		expect(hydrated.token.refreshToken).toBe('plain-refresh-token');
+	});
 });

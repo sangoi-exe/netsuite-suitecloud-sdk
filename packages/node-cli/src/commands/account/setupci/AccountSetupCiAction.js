@@ -43,6 +43,6 @@ module.exports = class AccountSetupCiAction extends BaseAction {
 			delete params[COMMAND.OPTIONS.DOMAIN];
 		}
 		validateMachineToMachineAuthIsAllowed();
-		return await authenticateCi(params, this._sdkPath, this._executionPath, this._executionEnvironmentContext);
+		return await authenticateCi(params, this._sdkPath, this._projectFolder, this._executionEnvironmentContext);
 	}
 };

@@ -27,7 +27,7 @@ module.exports = class ListObjectsAction extends BaseAction {
 	}
 
 	preExecute(params) {
-		params[COMMAND_PARAMETERS.AUTH_ID] = getProjectDefaultAuthId(this._executionPath);
+		params[COMMAND_PARAMETERS.AUTH_ID] = getProjectDefaultAuthId(this._projectFolder);
 		return params;
 	}
 

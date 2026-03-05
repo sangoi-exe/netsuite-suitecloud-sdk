@@ -32,20 +32,29 @@ const COMMAND_OPTIONS = {
 module.exports = class ValidateAction extends BaseAction {
 	constructor(options) {
 		super(options);
-		const projectInfoService = new ProjectInfoService(this._projectFolder);
-		this._projectType = projectInfoService.getProjectType()
-		this._projectName = projectInfoService.getProjectName()
+		this._activeProjectFolder = this._projectFolder;
+		this._activeProjectType = null;
+		this._activeProjectName = null;
 	}
 
 	preExecute(params) {
-		params[COMMAND_OPTIONS.PROJECT] = CommandUtils.quoteString(this._projectFolder);
+		const selectedProjectFolder = params[COMMAND_OPTIONS.PROJECT]
+			? CommandUtils.unquoteString(params[COMMAND_OPTIONS.PROJECT])
+			: this._projectFolder;
+		const projectInfoService = new ProjectInfoService(selectedProjectFolder);
 
-		AccountSpecificValuesUtils.validate(params, this._projectFolder);
-		ApplyInstallationPreferencesUtils.validate(params, this._projectFolder, this._commandMetadata.name, this._log);
+		this._activeProjectFolder = selectedProjectFolder;
+		this._activeProjectType = projectInfoService.getProjectType();
+		this._activeProjectName = projectInfoService.getProjectName();
+
+		params[COMMAND_OPTIONS.PROJECT] = CommandUtils.quoteString(selectedProjectFolder);
+
+		AccountSpecificValuesUtils.validate(params, selectedProjectFolder);
+		ApplyInstallationPreferencesUtils.validate(params, selectedProjectFolder, this._commandMetadata.name, this._log);
 
 		// Local validation is java-free and does not require auth; server validation will.
-		if (params[COMMAND_OPTIONS.SERVER]) {
-			params[COMMAND_OPTIONS.AUTH_ID] = getProjectDefaultAuthId(this._executionPath);
+		if (params[COMMAND_OPTIONS.SERVER] && !params[COMMAND_OPTIONS.AUTH_ID]) {
+			params[COMMAND_OPTIONS.AUTH_ID] = getProjectDefaultAuthId(selectedProjectFolder);
 		}
 
 		return {
@@ -83,8 +92,8 @@ module.exports = class ValidateAction extends BaseAction {
 			const operationResult = await executeWithSpinner({
 				action: this._sdkExecutor.execute(executionContext),
 				message: isServerValidation
-					? NodeTranslationService.getMessage(MESSAGES.VALIDATING, this._projectName, getProjectDefaultAuthId(this._executionPath))
-					: `Validating project "${this._projectName}" (local)`,
+					? NodeTranslationService.getMessage(MESSAGES.VALIDATING, this._activeProjectName, params[COMMAND_OPTIONS.AUTH_ID])
+					: `Validating project "${this._activeProjectName}" (local)`,
 			});
 
 			return operationResult.status === SdkOperationResultUtils.STATUS.SUCCESS
@@ -92,8 +101,8 @@ module.exports = class ValidateAction extends BaseAction {
 						.withResultMessage(operationResult.resultMessage)
 						.withServerValidation(isServerValidation)
 						.withAppliedInstallationPreferences(installationPreferencesApplied)
-						.withProjectType(this._projectType)
-						.withProjectFolder(this._projectFolder)
+						.withProjectType(this._activeProjectType)
+						.withProjectFolder(this._activeProjectFolder)
 						.withCommandParameters(sdkParams)
 						.withCommandFlags(flags)
 						.build()

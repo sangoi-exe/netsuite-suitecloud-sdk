@@ -11,3 +11,4 @@
 # node-cli specific
 **/__test__/**
 **/__tests__/**
+*.tgz

@@ -233,4 +233,22 @@ describe('CommandActionExecutor ExecuteAction():', function() {
 		});
 		expect(mockCommandUserExtensionOnCompleted).toBeCalledTimes(1);
 	});
+
+	it('should preserve explicit authid when applying default context params', () => {
+		const args = { authid: 'explicit-auth', feature: 'SUITEAPP' };
+
+		const result = commandExecutor._applyDefaultContextParams({ ...args }, 'default-auth');
+
+		expect(result.authid).toBe('explicit-auth');
+		expect(result.feature).toBe('SUITEAPP');
+	});
+
+	it('should inject default authid when authid is not provided', () => {
+		const args = { feature: 'SUITEAPP' };
+
+		const result = commandExecutor._applyDefaultContextParams({ ...args }, 'default-auth');
+
+		expect(result.authid).toBe('default-auth');
+		expect(result.feature).toBe('SUITEAPP');
+	});
 });

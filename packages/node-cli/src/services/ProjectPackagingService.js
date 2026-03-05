@@ -28,7 +28,7 @@ function pad2(num) {
 }
 
 function formatZipTimestamp(date) {
-	// Matches the Oracle jar format: YYYY-MM-DD_HH-mm-ss (local time)
+	// Timestamp format for generated package names: YYYY-MM-DD_HH-mm-ss (local time)
 	const yyyy = date.getFullYear();
 	const mm = pad2(date.getMonth() + 1);
 	const dd = pad2(date.getDate());
@@ -116,7 +116,7 @@ function createZip({ projectFolder, outputZipPath, packagingTime, directories, f
 			zipfile.addFile(absPath, normalizeZipPath(relativePath), { mtime: packagingTime });
 		};
 
-		// Root metadata first (matches jar expectations)
+		// Root metadata first for deterministic archive ordering.
 		addFile(DEPLOY_XML_FILE);
 		addFile(MANIFEST_XML_FILE);
 
@@ -182,4 +182,3 @@ module.exports = class ProjectPackagingService {
 		};
 	}
 };
-

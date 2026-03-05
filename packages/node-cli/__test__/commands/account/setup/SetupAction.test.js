@@ -17,22 +17,56 @@ const AUTH_MODE = {
 };
 
 describe('SetupAction execute(params)', () => {
-	it('should fail when exception message is returned from java-core', async () => {
+	afterEach(() => {
+		jest.clearAllMocks();
+	});
+
+	it('should fail when an execution error message is returned from core services', async () => {
 		// given
 		const setupAction = new SetupAction({});
-		const mockedJavaExecutionExceptionMessage = 'My mocked java exception';
+		const mockedExecutionExceptionMessage = 'My mocked execution exception';
 		// needed to avoid missing spinner message
 		nodeTranslationServiceGetMessageMock.mockReturnValue('My mocked spinner message');
 		sdkExecutorExecuteMock.mockImplementation(() => {
-			return Promise.reject(mockedJavaExecutionExceptionMessage);
+			return Promise.reject(mockedExecutionExceptionMessage);
 		});
 
 		// when
 		const actionResult = await setupAction.execute({ mode: AUTH_MODE.OAUTH, });
 
 		// then
-		const expectedResult = AuthenticateActionResult.Builder.withErrors([mockedJavaExecutionExceptionMessage]).build();
+		const expectedResult = AuthenticateActionResult.Builder.withErrors([mockedExecutionExceptionMessage]).build();
 		expect(actionResult.isSuccess()).toBe(false);
 		expect(actionResult.errorMessages).toStrictEqual(expectedResult.errorMessages);
+	});
+
+	it('should forward optional scope and clientid to authenticate SDK execution context', async () => {
+		// given
+		const setupAction = new SetupAction({});
+		nodeTranslationServiceGetMessageMock.mockReturnValue('My mocked spinner message');
+		let capturedExecutionContext;
+		sdkExecutorExecuteMock.mockImplementation((executionContext) => {
+			capturedExecutionContext = executionContext;
+			return Promise.reject('forced failure');
+		});
+
+		// when
+		const actionResult = await setupAction.execute({
+			mode: AUTH_MODE.OAUTH,
+			authid: 'lucas_wsl_sandbox',
+			clientid: 'custom-client-id',
+			scope: 'rest_webservices restlets',
+			url: 'https://system.netsuite.com',
+		});
+
+		// then
+		expect(actionResult.isSuccess()).toBe(false);
+		expect(capturedExecutionContext).toBeDefined();
+		expect(capturedExecutionContext.getParams()).toMatchObject({
+			'-authid': 'lucas_wsl_sandbox',
+			'-clientid': 'custom-client-id',
+			'-scope': 'rest_webservices restlets',
+			'-url': 'https://system.netsuite.com',
+		});
 	});
 });

@@ -24,7 +24,7 @@ const CALLBACK_URL_TEMPLATE = `http://${CALLBACK_HOST}:%d${CALLBACK_PATH}`;
 const PORT_RANGE_MIN = 52300;
 const PORT_RANGE_MAX = 52315;
 const DEFAULT_TIMEOUT_MS = 300000;
-const DEFAULT_SCOPE = 'rest_webservices';
+const DEFAULT_SCOPE = 'restlets';
 
 const PRODUCTION_INTEGRATION_CLIENT_ID = '6da57bf05a6247fc876c6d228184ff487760a382a43ac7e93eaff743803d22ac';
 const DEVELOPMENT_INTEGRATION_CLIENT_ID = 'a3f34eae0e4ab97240fb221ea91623e790b7cb577421e0185bf5d108837c7bd1';
@@ -348,7 +348,7 @@ module.exports = class NetSuitePkceAuthService {
 				accountId,
 				clientId,
 				domain: options.domain || null,
-				scope: options.scope || DEFAULT_SCOPE,
+				scope: options.scope || tokenData.scope || DEFAULT_SCOPE,
 			},
 		};
 	}

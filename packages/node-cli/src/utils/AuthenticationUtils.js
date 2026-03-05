@@ -26,6 +26,8 @@ const COMMANDS = {
 		SDK_COMMAND: 'authenticate',
 		PARAMS: {
 			AUTH_ID: 'authid',
+			CLIENTID: 'clientid',
+			SCOPE: 'scope',
 			ACCOUNT: 'account',
 			TOKEN_ID: 'tokenid',
 			TOKEN_SECRET: 'tokensecret',
@@ -123,6 +125,12 @@ async function authenticateWithOauth(params, sdkPath, projectFolder, cancelToken
 
 	if (params.url) {
 		contextBuilder.addParam(COMMANDS.AUTHENTICATE.PARAMS.URL, params.url);
+	}
+	if (params.clientid) {
+		contextBuilder.addParam(COMMANDS.AUTHENTICATE.PARAMS.CLIENTID, params.clientid);
+	}
+	if (params.scope) {
+		contextBuilder.addParam(COMMANDS.AUTHENTICATE.PARAMS.SCOPE, params.scope);
 	}
 	const oauthContext = contextBuilder.build();
 	return executeWithSpinner({

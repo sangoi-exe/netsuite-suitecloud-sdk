@@ -26,19 +26,29 @@ const DEFAULT_DESTINATION_FOLDER = 'build';
 module.exports = class PackageAction extends BaseAction {
 	constructor(options) {
 		super(options);
-		this._projectInfoService = new ProjectInfoService(this._projectFolder);
 	}
 
 	preExecute(params) {
-		this._projectInfoService.checkWorkingDirectoryContainsValidProject(this._commandMetadata.name);
+		const selectedProjectFolder = params[COMMAND_OPTIONS.PROJECT]
+			? CommandUtils.unquoteString(params[COMMAND_OPTIONS.PROJECT])
+			: this._projectFolder;
+		const projectInfoService = new ProjectInfoService(selectedProjectFolder);
+		projectInfoService.checkWorkingDirectoryContainsValidProject(this._commandMetadata.name);
 
-		AccountSpecificValuesUtils.validate(params, this._projectFolder);
-
-		return {
-			[COMMAND_OPTIONS.DESTINATION]: CommandUtils.quoteString(path.join(this._executionPath, DEFAULT_DESTINATION_FOLDER)),
-			[COMMAND_OPTIONS.PROJECT]: CommandUtils.quoteString(this._projectFolder),
+		AccountSpecificValuesUtils.validate(params, selectedProjectFolder);
+		const transformedParams = {
+			...params,
 			...AccountSpecificValuesUtils.transformArgument(params),
 		};
+
+		if (!transformedParams[COMMAND_OPTIONS.DESTINATION]) {
+			transformedParams[COMMAND_OPTIONS.DESTINATION] = CommandUtils.quoteString(path.join(this._executionPath, DEFAULT_DESTINATION_FOLDER));
+		}
+		if (!transformedParams[COMMAND_OPTIONS.PROJECT]) {
+			transformedParams[COMMAND_OPTIONS.PROJECT] = CommandUtils.quoteString(this._projectFolder);
+		}
+
+		return transformedParams;
 	}
 
 	async execute(params) {

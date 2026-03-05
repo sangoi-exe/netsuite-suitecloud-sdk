@@ -146,7 +146,7 @@ module.exports = class CreateObjectInputHandler extends BaseInputHandler {
 			answers[COMMAND_OPTIONS.PARENT_DIRECTORY] = projectAbsolutePath;
 			answers[COMMAND_OPTIONS.PROJECT_FOLDER_NAME] = projectFolderName;
 		} else {
-			// parentdirectory is a mandatory option in javaCLI but it must be computed in the nodeCLI
+			// parentdirectory is required by command execution and is computed from interactive answers.
 			answers[COMMAND_OPTIONS.PARENT_DIRECTORY] = 'not_specified';
 		}
 

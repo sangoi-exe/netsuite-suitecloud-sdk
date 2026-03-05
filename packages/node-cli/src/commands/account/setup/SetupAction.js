@@ -21,11 +21,11 @@ module.exports = class SetupAction extends BaseAction {
 	async execute(params) {
 		try {
 			if (params.mode === AUTH_MODE.OAUTH) {
-				return await authenticateWithOauth(params, this._sdkPath, this._executionPath, this._executionEnvironmentContext);
+				return await authenticateWithOauth(params, this._sdkPath, this._projectFolder, this._executionEnvironmentContext);
 			} else if (params.mode === AUTH_MODE.REUSE) {
 				const authId = params.authentication.authId;
 				const accountInfo = params.authentication.accountInfo;
-				setDefaultAuthentication(this._executionPath, authId);
+				setDefaultAuthentication(this._projectFolder, authId);
 				return AuthenticateActionResult.Builder.success()
 					.withMode(AUTH_MODE.REUSE)
 					.withAuthId(authId)

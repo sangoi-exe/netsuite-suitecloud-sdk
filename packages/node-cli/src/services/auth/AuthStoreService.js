@@ -151,10 +151,10 @@ module.exports = class AuthStoreService {
 		const copy = { ...record };
 		if (copy.token && (copy.token.accessToken || copy.token.refreshToken)) {
 			if (!key) {
-				// No passkey configured: do not persist raw OAuth tokens.
+				// DEV_MACHINE mode has no passkey by design; keep raw tokens so PKCE refresh works across commands.
 				copy.token = { ...copy.token };
-				delete copy.token.accessToken;
-				delete copy.token.refreshToken;
+				delete copy.token.accessTokenEnc;
+				delete copy.token.refreshTokenEnc;
 			} else {
 				copy.token = { ...copy.token };
 				if (copy.token.accessToken) {

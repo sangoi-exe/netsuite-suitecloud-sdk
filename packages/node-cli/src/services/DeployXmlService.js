@@ -27,7 +27,7 @@ function normalizeDeployPathPattern(rawPath) {
 		return '';
 	}
 	let pattern = `${rawPath}`.trim();
-	// Accept both "~/"-prefixed and plain relative patterns (jar seems to accept both).
+	// Accept both "~/"-prefixed and plain relative patterns.
 	if (pattern.startsWith('~/') || pattern.startsWith('~\\')) {
 		pattern = pattern.slice(2);
 	}

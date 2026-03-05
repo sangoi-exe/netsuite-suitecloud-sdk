@@ -75,7 +75,7 @@ module.exports = class NetSuiteDomainsService {
 
 		const data = response.data || {};
 
-		// Seen in JAR strings: restDomain/systemDomain/webservicesDomain
+		// Accept both top-level and nested datacenterurls field shapes.
 		const restDomain = data.restDomain || (data.urls && data.urls.restDomain) || null;
 		const systemDomain = data.systemDomain || (data.urls && data.urls.systemDomain) || null;
 		const webservicesDomain = data.webservicesDomain || (data.urls && data.urls.webservicesDomain) || null;

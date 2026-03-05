@@ -25,7 +25,7 @@ module.exports = class ListFilesAction extends BaseAction {
 	}
 
 	preExecute(args) {
-		args[COMMAND_OPTIONS.AUTH_ID] = getProjectDefaultAuthId(this._executionPath);
+		args[COMMAND_OPTIONS.AUTH_ID] = getProjectDefaultAuthId(this._projectFolder);
 		return args;
 	}
 

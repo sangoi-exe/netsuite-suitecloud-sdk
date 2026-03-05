@@ -160,6 +160,7 @@ module.exports = class CLI {
 				commandMetadata: commandMetadata,
 				program: program,
 				runInInteractiveMode: runInInteractiveMode,
+				runInIntegrationMode: false,
 				executeCommandFunction: async (options) => {
 					return this._commandActionExecutor.executeAction({
 						commandName: commandMetadata.name,

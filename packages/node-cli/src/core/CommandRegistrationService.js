@@ -42,11 +42,15 @@ module.exports = class CommandRegistrationService {
 		assert(options.program);
 		assert(options.executeCommandFunction);
 		assert(typeof options.runInInteractiveMode === 'boolean');
+		if (Object.prototype.hasOwnProperty.call(options, 'runInIntegrationMode')) {
+			assert(typeof options.runInIntegrationMode === 'boolean');
+		}
 
 		const commandMetadata = options.commandMetadata;
 		const program = options.program;
 		const executeCommandFunction = options.executeCommandFunction;
 		const runInInteractiveMode = options.runInInteractiveMode;
+		const runInIntegrationMode = options.runInIntegrationMode === true;
 
 		const helpMessage = NodeTranslationService.getMessage(COMMAND_OPTIONS.HELP);
 
@@ -63,7 +67,7 @@ module.exports = class CommandRegistrationService {
 					mandatory: false,
 				};
 			}
-			commandSetup = this._addNonInteractiveCommandOptions(commandSetup, commandMetadata.options);
+			commandSetup = this._addNonInteractiveCommandOptions(commandSetup, commandMetadata.options, runInIntegrationMode);
 		}
 
 		commandSetup.description(commandMetadata.description).action(async (options) => {
@@ -72,10 +76,10 @@ module.exports = class CommandRegistrationService {
 		});
 	}
 
-	_addNonInteractiveCommandOptions(commandSetup, options) {
+	_addNonInteractiveCommandOptions(commandSetup, options, runInIntegrationMode) {
 		const optionsSortedByName = Object.values(options).sort((option1, option2) => option1.name.localeCompare(option2.name));
 		optionsSortedByName.forEach((option) => {
-			if (option.disableInIntegrationMode) {
+			if (runInIntegrationMode && option.disableInIntegrationMode) {
 				return;
 			}
 			let optionString = '';

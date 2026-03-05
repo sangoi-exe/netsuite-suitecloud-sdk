@@ -77,6 +77,53 @@ describe('NodeSdkExecutor authenticate/refreshauthorization commands', () => {
 		expect(storedRecord.token.refreshToken).toBe('pkce-refresh-token');
 	});
 
+	test('authenticate forwards optional clientid and scope to PKCE service', async () => {
+		process.env[ENV_VARS.SUITECLOUD_CI_PASSKEY] = 'test-passkey';
+
+		const sdkHome = mkTempDir();
+		const executor = new NodeSdkExecutor(sdkHome);
+		executor._pkceAuthService = {
+			authenticate: jest.fn(async () => ({
+				accountInfo: { companyName: 'ACME', companyId: '12345_SB1', roleName: 'Administrator' },
+				hostInfo: { hostName: 'system.netsuite.com' },
+				domains: {
+					restDomain: 'https://12345.suitetalk.api.netsuite.com',
+					systemDomain: 'https://12345.app.netsuite.com',
+					webservicesDomain: 'https://12345.suitetalk.api.netsuite.com',
+				},
+				authConfig: {
+					accountId: '12345_SB1',
+					clientId: 'custom-client-id',
+					domain: 'https://system.netsuite.com',
+					scope: 'rest_webservices restlets',
+				},
+				token: {
+					accessToken: 'pkce-access-token',
+					refreshToken: 'pkce-refresh-token',
+					expiresAt: '2099-01-01T00:00:00.000Z',
+					tokenType: 'Bearer',
+				},
+			})),
+		};
+
+		const context = SdkExecutionContext.Builder.forCommand('authenticate')
+			.integration()
+			.addParam('authid', 'devAuth')
+			.addParam('url', 'https://system.netsuite.com')
+			.addParam('clientid', 'custom-client-id')
+			.addParam('scope', 'rest_webservices restlets')
+			.build();
+
+		const result = await executor.execute(context);
+		expect(result.status).toBe('SUCCESS');
+		expect(executor._pkceAuthService.authenticate).toHaveBeenCalledWith({
+			sdkPath: sdkHome,
+			domain: 'https://system.netsuite.com',
+			clientId: 'custom-client-id',
+			scope: 'rest_webservices restlets',
+		});
+	});
+
 	test('authenticate returns error when authid is missing', async () => {
 		const sdkHome = mkTempDir();
 		const executor = new NodeSdkExecutor(sdkHome);

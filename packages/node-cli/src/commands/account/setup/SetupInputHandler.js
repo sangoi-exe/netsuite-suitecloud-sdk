@@ -161,7 +161,9 @@ module.exports = class SetupInputHandler extends BaseInputHandler {
 			createNewAuthentication: true,
 			authid: newAuthenticationAnswers[ANSWERS.NEW_AUTH_ID],
 			mode: AUTH_MODE.OAUTH,
-			...(newAuthenticationAnswers[ANSWERS.URL] && { url: newAuthenticationAnswers[ANSWERS.URL] })
+			...(newAuthenticationAnswers[ANSWERS.URL] && { url: newAuthenticationAnswers[ANSWERS.URL] }),
+			...(params && params.clientid && { clientid: params.clientid }),
+			...(params && params.scope && { scope: params.scope }),
 		};
 
 		return executeActionContext;

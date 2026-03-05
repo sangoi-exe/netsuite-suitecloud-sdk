@@ -44,23 +44,32 @@ module.exports = class DeployAction extends (
 ) {
 	constructor(options) {
 		super(options);
-		const projectInfoService = new ProjectInfoService(this._projectFolder);
-		this._projectType = projectInfoService.getProjectType();
-		this._projectName = projectInfoService.getProjectName();
+		this._activeProjectFolder = this._projectFolder;
+		this._activeProjectType = null;
+		this._activeProjectName = null;
 	}
 
 	preExecute(params) {
-		AccountSpecificValuesUtils.validate(params, this._projectFolder);
-		ApplyInstallationPreferencesUtils.validate(params, this._projectFolder, this._commandMetadata.name, this._log);
+		const selectedProjectFolder = params[COMMAND.OPTIONS.PROJECT]
+			? CommandUtils.unquoteString(params[COMMAND.OPTIONS.PROJECT])
+			: this._projectFolder;
+		const projectInfoService = new ProjectInfoService(selectedProjectFolder);
+
+		this._activeProjectFolder = selectedProjectFolder;
+		this._activeProjectType = projectInfoService.getProjectType();
+		this._activeProjectName = projectInfoService.getProjectName();
+
+		AccountSpecificValuesUtils.validate(params, selectedProjectFolder);
+		ApplyInstallationPreferencesUtils.validate(params, selectedProjectFolder, this._commandMetadata.name, this._log);
 
 		// Preview is local and does not require auth. Deploy/validate will.
-		if (!params[COMMAND.FLAGS.PREVIEW]) {
-			params[COMMAND.OPTIONS.AUTH_ID] = getProjectDefaultAuthId(this._executionPath);
+		if (!params[COMMAND.FLAGS.PREVIEW] && !params[COMMAND.OPTIONS.AUTH_ID]) {
+			params[COMMAND.OPTIONS.AUTH_ID] = getProjectDefaultAuthId(selectedProjectFolder);
 		}
 
 		return {
 			...params,
-			[COMMAND.OPTIONS.PROJECT]: CommandUtils.quoteString(this._projectFolder),
+			[COMMAND.OPTIONS.PROJECT]: CommandUtils.quoteString(selectedProjectFolder),
 			...AccountSpecificValuesUtils.transformArgument(params),
 		};
 	}
@@ -116,7 +125,7 @@ module.exports = class DeployAction extends (
 				action: this._sdkExecutor.execute(executionContextForDryrun),
 				message: NodeTranslationService.getMessage(
 					COMMAND_DEPLOY.MESSAGES.PREVIEWING,
-					this._projectName,
+					this._activeProjectName,
 					params[COMMAND.OPTIONS.AUTH_ID] || 'local',
 				),
 			});
@@ -143,21 +152,22 @@ module.exports = class DeployAction extends (
 				action: this._sdkExecutor.execute(executionContextForDeploy),
 				message: NodeTranslationService.getMessage(
 					COMMAND_DEPLOY.MESSAGES.DEPLOYING,
-					this._projectName,
+					this._activeProjectName,
 					params[COMMAND.OPTIONS.AUTH_ID],
 				),
 			});
 
 			const isServerValidation = !!sdkParams[COMMAND.FLAGS.VALIDATE];
-			const isApplyInstallationPreferences = this._projectType === PROJECT_SUITEAPP && flags.includes(COMMAND.FLAGS.APPLY_INSTALLATION_PREFERENCES);
+			const isApplyInstallationPreferences =
+				this._activeProjectType === PROJECT_SUITEAPP && flags.includes(COMMAND.FLAGS.APPLY_INSTALLATION_PREFERENCES);
 
 			return operationResult.status === SdkOperationResultUtils.STATUS.SUCCESS
 				? DeployActionResult.Builder.withData(operationResult.data)
 					.withResultMessage(operationResult.resultMessage)
 					.withServerValidation(isServerValidation)
 					.withAppliedInstallationPreferences(isApplyInstallationPreferences)
-					.withProjectType(this._projectType)
-					.withProjectFolder(this._projectFolder)
+					.withProjectType(this._activeProjectType)
+					.withProjectFolder(this._activeProjectFolder)
 					.withCommandParameters(sdkParams)
 					.withCommandFlags(flags)
 					.build()
