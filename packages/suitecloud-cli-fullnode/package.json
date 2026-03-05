@@ -1,6 +1,6 @@
 {
-	"name": "@sangoi-exe/suitecloud-cli-fullnode",
-	"version": "1.0.2026-1.302",
+	"name": "suitecloud-cli-fullnode",
+	"version": "1.0.2026-1.312",
 	"license": "UPL-1.0",
 	"description": "SuiteCloud CLI for Node.js",
 	"keywords": [

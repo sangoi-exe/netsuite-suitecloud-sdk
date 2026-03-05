@@ -1,33 +1,23 @@
-# SuiteCloud CLI (Java-Free Node Fork)
+# suitecloud-cli-fullnode (Java-Free SuiteCloud CLI Fork)
 
-Java-free SuiteCloud CLI fork for Linux/WSL, with Node-only runtime and npm distribution under a non-official package name.
+Community-maintained SuiteCloud CLI fork focused on Linux/WSL with a Node-only runtime.
 
-[![npm version](https://img.shields.io/npm/v/%40sangoi-exe%2Fsuitecloud-cli-fullnode)](https://www.npmjs.com/package/@sangoi-exe/suitecloud-cli-fullnode)
+[![npm version](https://img.shields.io/npm/v/suitecloud-cli-fullnode)](https://www.npmjs.com/package/suitecloud-cli-fullnode)
 [![license](https://img.shields.io/github/license/sangoi-exe/netsuite-suitecloud-sdk)](./LICENSE.txt)
 [![node](https://img.shields.io/badge/node-22%20LTS-339933)](https://nodejs.org/)
-[![runtime](https://img.shields.io/badge/runtime-node--only-blue)](./packages/node-cli/src/core/sdkexecutor/NodeSdkExecutor.js)
-
-Quick links: [Get Started](#get-started) - [Install](#install) - [Versioning Scheme](#versioning-scheme) - [Publish to npmjs](#publish-to-npmjs) - [Command Coverage](#command-coverage) - [Development](#development)
+[![runtime](https://img.shields.io/badge/runtime-node--only-blue)](./packages/suitecloud-cli-fullnode/src/core/sdkexecutor/NodeSdkExecutor.js)
 
 > [!IMPORTANT]
-> Status: production-tested in WSL with browser `account:setup` + `project:deploy` working in Node-only flow.
+> This is an unofficial package (`suitecloud-cli-fullnode`). It is not affiliated with Oracle.
 
-## Table of Contents
-
-- [Get Started](#get-started)
-- [Install](#install)
-- [Versioning Scheme](#versioning-scheme)
-- [Publish to npmjs](#publish-to-npmjs)
-- [Command Coverage](#command-coverage)
-- [Development](#development)
-- [License](#license)
+Quick links: [Get Started](#get-started) - [Install from Source](#install-from-source) - [Versioning](#versioning) - [Publish](#publish) - [Command Coverage](#command-coverage) - [Development](#development)
 
 ## Get Started
 
 Install globally from npm:
 
 ```bash
-npm install -g @sangoi-exe/suitecloud-cli-fullnode
+npm install -g suitecloud-cli-fullnode
 suitecloud --version
 suitecloud --help
 ```
@@ -39,44 +29,40 @@ suitecloud account:setup
 suitecloud project:deploy
 ```
 
-## Install
-
-Build and install from local tarball:
+## Install from Source
 
 ```bash
-cd packages/node-cli
+cd packages/suitecloud-cli-fullnode
 npm install
 npm pack
-npm install -g ./sangoi-exe-suitecloud-cli-fullnode-*.tgz
+npm install -g ./suitecloud-cli-fullnode-*.tgz
 suitecloud --version
 ```
 
-## Versioning Scheme
+## Versioning
 
-This fork uses a semver-compatible format:
+This fork uses:
 
 `<fork_major>.<fork_minor>.<netsuite_year>-<netsuite_release>.<upstream_cli_compact>`
 
 Current release:
 
-- `1.0.2026-1.302`
-- `1.0` = fork package version
+- `1.0.2026-1.312`
+- `1.0` = fork package line
 - `2026-1` = NetSuite line `2026.1`
-- `302` = upstream SuiteCloud CLI baseline `3.0.2`
+- `312` = upstream CLI baseline `3.1.2`
 
-## Publish to npmjs
+## Publish
+
+From repository root:
 
 ```bash
-npm login
-cd packages/node-cli
-npm publish --access public
+npm publish -w packages/suitecloud-cli-fullnode --access public --tag latest
 ```
-
-If your npm user/scope is not `@sangoi-exe`, change `packages/node-cli/package.json` `name` before publish.
 
 ## Command Coverage
 
-Implemented command surface in this fork:
+Implemented command surface:
 
 - `account:setup`
 - `account:setup:ci`
@@ -97,17 +83,13 @@ Implemented command surface in this fork:
 ## Development
 
 ```bash
-cd packages/node-cli
+cd packages/suitecloud-cli-fullnode
 npm test -- --runInBand
 ```
 
-Node runtime entrypoint:
+Package README used by npm:
 
-- `packages/node-cli/src/core/sdkexecutor/NodeSdkExecutor.js`
-
-Detailed CLI docs:
-
-- `packages/node-cli/README.md`
+- `packages/suitecloud-cli-fullnode/README.md`
 
 ## License
 

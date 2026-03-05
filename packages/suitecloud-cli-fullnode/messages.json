@@ -289,6 +289,7 @@
 	"UTILS_AUTHENTICATION_OAUTH_REFRESH_MISSING_ACCOUNT_ID": "Missing accountId for PKCE token refresh.",
 	"UTILS_AUTHENTICATION_OAUTH_REFRESH_MISSING_CLIENT_ID": "Missing clientId for PKCE token refresh.",
 	"UTILS_AUTHENTICATION_OAUTH_REFRESH_MISSING_TOKEN": "Missing refresh token for PKCE reauthorization. Re-run \"suitecloud account:setup\".",
+	"UTILS_AUTHENTICATION_OAUTH_REFRESH_ACCOUNT_MISMATCH": "Canceling the authentication refresh. You selected the {0} account. Ensure to select the {1} account for successfully refreshing the authentication credentials.",
 	"UTILS_AUTHENTICATION_OAUTH_REFRESH_REQUEST_FAILED": "OAuth refresh request failed{0}: {1}",
 	"UTILS_AUTHENTICATION_OAUTH_REFRESH_RESPONSE_MISSING_ACCESS_TOKEN": "OAuth refresh response missing access_token: {0}",
 	"UTILS_AUTHENTICATION_OAUTH_AUTHORIZATION_CODE_REQUEST_FAILED": "OAuth authorization-code token request failed{0}: {1}",

@@ -1,5 +1,5 @@
 'use strict';
-const { validateMachineToMachineAuthIsAllowed }  = require('../../../node-cli/src/services/ExecutionContextService');
+const { validateMachineToMachineAuthIsAllowed }  = require('../../src/services/ExecutionContextService');
 const { validateBrowserBasedAuthIsAllowed, getBrowserBasedWarningMessages } = require('../../src/services/ExecutionContextService');
 
 const {

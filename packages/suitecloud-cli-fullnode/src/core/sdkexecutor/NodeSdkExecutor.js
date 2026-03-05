@@ -436,14 +436,26 @@ module.exports = class NodeSdkExecutor {
 					scope: recordWithSecrets.authConfig.scope,
 				});
 			} else if (recordWithSecrets.type === 'PKCE') {
-				authResult = await this._pkceAuthService.refreshWithRefreshToken({
-					accountId: recordWithSecrets.authConfig.accountId,
-					clientId: recordWithSecrets.authConfig.clientId,
-					domain: recordWithSecrets.authConfig.domain,
-					scope: recordWithSecrets.authConfig.scope,
-					domains: recordWithSecrets.domains,
-					refreshToken: recordWithSecrets.token && recordWithSecrets.token.refreshToken,
-				});
+				const refreshToken = recordWithSecrets.token && recordWithSecrets.token.refreshToken;
+				if (!refreshToken) {
+					authResult = await this._reauthorizePkce(recordWithSecrets);
+				} else {
+					try {
+						authResult = await this._pkceAuthService.refreshWithRefreshToken({
+							accountId: recordWithSecrets.authConfig.accountId,
+							clientId: recordWithSecrets.authConfig.clientId,
+							domain: recordWithSecrets.authConfig.domain,
+							scope: recordWithSecrets.authConfig.scope,
+							domains: recordWithSecrets.domains,
+							refreshToken,
+						});
+					} catch (error) {
+						if (!this._isInvalidGrantError(error)) {
+							throw error;
+						}
+						authResult = await this._reauthorizePkce(recordWithSecrets);
+					}
+				}
 			} else {
 				return { status: 'ERROR', errorMessages: [`Authentication ID "${authId}" has unsupported auth type "${recordWithSecrets.type}".`] };
 			}
@@ -515,16 +527,24 @@ module.exports = class NodeSdkExecutor {
 				} else if (record.type === 'PKCE') {
 					const refreshToken = record.token && record.token.refreshToken;
 					if (!refreshToken) {
-						throw new Error(NodeTranslationService.getMessage(UTILS.AUTHENTICATION.OAUTH_REFRESH_MISSING_TOKEN));
+						authResult = await this._reauthorizePkce(record);
+					} else {
+						try {
+							authResult = await this._pkceAuthService.refreshWithRefreshToken({
+								accountId: record.authConfig.accountId,
+								clientId: record.authConfig.clientId,
+								domain: record.authConfig.domain,
+								scope: record.authConfig.scope,
+								domains: record.domains,
+								refreshToken,
+							});
+						} catch (error) {
+							if (!this._isInvalidGrantError(error)) {
+								throw error;
+							}
+							authResult = await this._reauthorizePkce(record);
+						}
 					}
-					authResult = await this._pkceAuthService.refreshWithRefreshToken({
-						accountId: record.authConfig.accountId,
-						clientId: record.authConfig.clientId,
-						domain: record.authConfig.domain,
-						scope: record.authConfig.scope,
-						domains: record.domains,
-						refreshToken,
-					});
 				} else {
 				throw new Error(`Authentication ID "${authId}" has unsupported auth type "${record.type}".`);
 			}
@@ -561,6 +581,49 @@ module.exports = class NodeSdkExecutor {
 			systemDomain: record.domains.systemDomain,
 			accessToken: record.token.accessToken,
 		};
+	}
+
+	_isInvalidGrantError(error) {
+		const message = error && error.message ? error.message : `${error}`;
+		return /invalid_grant/i.test(message);
+	}
+
+	async _reauthorizePkce(record) {
+		const authConfig = (record && record.authConfig) || {};
+		if (!authConfig.accountId) {
+			throw new Error(NodeTranslationService.getMessage(UTILS.AUTHENTICATION.OAUTH_REFRESH_MISSING_ACCOUNT_ID));
+		}
+		const expectedAccountId = `${authConfig.accountId}`.trim();
+
+		const options = { sdkPath: this._sdkPath };
+		if (authConfig.domain) {
+			options.domain = authConfig.domain;
+		} else if (record && record.domains && record.domains.systemDomain) {
+			options.domain = record.domains.systemDomain;
+		}
+		if (authConfig.clientId) {
+			options.clientId = authConfig.clientId;
+		}
+		if (authConfig.scope) {
+			options.scope = authConfig.scope;
+		}
+
+		const authResult = await this._pkceAuthService.authenticate(options);
+		const selectedAccountId = `${(authResult && authResult.authConfig && authResult.authConfig.accountId) || ''}`.trim();
+		if (!selectedAccountId) {
+			throw new Error(NodeTranslationService.getMessage(UTILS.AUTHENTICATION.OAUTH_CALLBACK_MISSING_COMPANY));
+		}
+		if (selectedAccountId.toUpperCase() !== expectedAccountId.toUpperCase()) {
+			throw new Error(
+				NodeTranslationService.getMessage(
+					UTILS.AUTHENTICATION.OAUTH_REFRESH_ACCOUNT_MISMATCH,
+					selectedAccountId,
+					expectedAccountId
+				)
+			);
+		}
+
+		return authResult;
 	}
 
 	async _listFolders(executionContext) {

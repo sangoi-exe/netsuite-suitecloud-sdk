@@ -19,7 +19,7 @@ steps:
       npm -v
 
   - type: Command
-    name: "Install node-cli & unit-testing packages"
+    name: "Install suitecloud-cli-fullnode & unit-testing packages"
     command: |
       rm -f package-lock.json
       npm install --ignore-scripts
@@ -32,12 +32,12 @@ steps:
 
 
   - type: Command
-    name: "Run CycloneDX for node-cli & unit-testing packages"
+    name: "Run CycloneDX for suitecloud-cli-fullnode & unit-testing packages"
     command: |
       npx @cyclonedx/cyclonedx-npm \
         --omit dev \
         --output-format JSON \
-        --output-file artifactSBOM_node-cli_unit-testing.json \
+        --output-file artifactSBOM_suitecloud-cli-fullnode_unit-testing.json \
         --spec-version 1.4
 
   - type: Command
@@ -69,7 +69,7 @@ steps:
     command: |
       # For more details, visit https://github.com/CycloneDX/cyclonedx-cli/blob/main/README.md
       chmod +x cyclonedx-linux-x64
-      ./cyclonedx-linux-x64 merge --input-files artifactSBOM_node-cli_unit-testing.json packages/vscode-extension/artifactSBOM_vscode-extension.json --output-file artifactSBOM.json
+      ./cyclonedx-linux-x64 merge --input-files artifactSBOM_suitecloud-cli-fullnode_unit-testing.json packages/vscode-extension/artifactSBOM_vscode-extension.json --output-file artifactSBOM.json
 outputArtifacts:
   - name: artifactSBOM
     type: BINARY
