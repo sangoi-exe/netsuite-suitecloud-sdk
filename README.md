@@ -2,7 +2,7 @@
 
 Java-free SuiteCloud CLI fork for Linux/WSL, with Node-only runtime and npm distribution under a non-official package name.
 
-[![npm version](https://img.shields.io/npm/v/%40sangoi-exe%2Fsuitecloud-cli)](https://www.npmjs.com/package/@sangoi-exe/suitecloud-cli)
+[![npm version](https://img.shields.io/npm/v/%40sangoi-exe%2Fsuitecloud-cli-fullnode)](https://www.npmjs.com/package/@sangoi-exe/suitecloud-cli-fullnode)
 [![license](https://img.shields.io/github/license/sangoi-exe/netsuite-suitecloud-sdk)](./LICENSE.txt)
 [![node](https://img.shields.io/badge/node-22%20LTS-339933)](https://nodejs.org/)
 [![runtime](https://img.shields.io/badge/runtime-node--only-blue)](./packages/node-cli/src/core/sdkexecutor/NodeSdkExecutor.js)
@@ -26,7 +26,7 @@ Quick links: [Get Started](#get-started) - [Install](#install) - [Publish to npm
 Install globally from npm:
 
 ```bash
-npm install -g @sangoi-exe/suitecloud-cli
+npm install -g @sangoi-exe/suitecloud-cli-fullnode
 suitecloud --version
 suitecloud --help
 ```
@@ -46,7 +46,7 @@ Build and install from local tarball:
 cd packages/node-cli
 npm install
 npm pack
-npm install -g ./sangoi-exe-suitecloud-cli-*.tgz
+npm install -g ./sangoi-exe-suitecloud-cli-fullnode-*.tgz
 suitecloud --version
 ```
 

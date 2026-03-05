@@ -2,9 +2,9 @@
 
 # SuiteCloud CLI for Node.js
 <p>
-  <a href="https://www.npmjs.com/package/@sangoi-exe/suitecloud-cli">
-    <img src="https://img.shields.io/npm/dm/@sangoi-exe/suitecloud-cli.svg" alt="npm-cli"/>
-    <img src="https://img.shields.io/npm/v/@sangoi-exe/suitecloud-cli.svg" alt="npm-cli"/>
+  <a href="https://www.npmjs.com/package/@sangoi-exe/suitecloud-cli-fullnode">
+    <img src="https://img.shields.io/npm/dm/@sangoi-exe/suitecloud-cli-fullnode.svg" alt="npm-cli"/>
+    <img src="https://img.shields.io/npm/v/@sangoi-exe/suitecloud-cli-fullnode.svg" alt="npm-cli"/>
   </a>
 </p>
 
@@ -32,7 +32,7 @@ The following table shows the CLI versions currently available in NPM.
 Since CLI for Node.js is a development tool, use a global instance to install it by running the following command:
 
 ```
-npm install -g @sangoi-exe/suitecloud-cli
+npm install -g @sangoi-exe/suitecloud-cli-fullnode
 ```
 CLI for Node.js is available from within any directory by running `suitecloud`.
 

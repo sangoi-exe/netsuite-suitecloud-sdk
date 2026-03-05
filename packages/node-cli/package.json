@@ -1,5 +1,5 @@
 {
-	"name": "@sangoi-exe/suitecloud-cli",
+	"name": "@sangoi-exe/suitecloud-cli-fullnode",
 	"version": "3.0.2",
 	"license": "UPL-1.0",
 	"description": "SuiteCloud CLI for Node.js",
