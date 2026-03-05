@@ -22,3 +22,4 @@ packages/**/dist
 
 # session artifacts / large logs
 log-sessao*.txt
+codex_scratchpad_local.md
