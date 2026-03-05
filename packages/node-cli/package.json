@@ -1,5 +1,5 @@
 {
-	"name": "@oracle/suitecloud-cli",
+	"name": "@sangoi-exe/suitecloud-cli",
 	"version": "3.0.2",
 	"license": "UPL-1.0",
 	"description": "SuiteCloud CLI for Node.js",
@@ -14,11 +14,11 @@
 		"access": "public"
 	},
 	"bugs": {
-		"url": "https://github.com/oracle/netsuite-suitecloud-sdk/issues"
+		"url": "https://github.com/sangoi-exe/netsuite-suitecloud-sdk/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/oracle/netsuite-suitecloud-sdk.git#master"
+		"url": "git+https://github.com/sangoi-exe/netsuite-suitecloud-sdk.git#master"
 	},
 	"main": "./src/suitecloud.js",
 	"preferGlobal": true,

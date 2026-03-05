@@ -1,48 +1,100 @@
-# SuiteCloud CLI (Java-free fork)
+# SuiteCloud CLI (Java-Free Node Fork)
 
-This repository maintains a Java-free fork of the SuiteCloud CLI for Node.js, focused on running in Linux/WSL without downloading or executing Oracle JAR artifacts.
+Java-free SuiteCloud CLI fork for Linux/WSL, with Node-only runtime and npm distribution under a non-official package name.
 
-## Current status
+[![npm version](https://img.shields.io/npm/v/%40sangoi-exe%2Fsuitecloud-cli)](https://www.npmjs.com/package/@sangoi-exe/suitecloud-cli)
+[![license](https://img.shields.io/github/license/sangoi-exe/netsuite-suitecloud-sdk)](./LICENSE.txt)
+[![node](https://img.shields.io/badge/node-22%20LTS-339933)](https://nodejs.org/)
+[![runtime](https://img.shields.io/badge/runtime-node--only-blue)](./packages/node-cli/src/core/sdkexecutor/NodeSdkExecutor.js)
 
-- Runtime engine: Node-only (`packages/node-cli/src/core/sdkexecutor/NodeSdkExecutor.js`)
-- Java requirement: removed from runtime flow
-- Supported command surface in this fork:
-  - `account:setup`
-  - `account:setup:ci`
-  - `account:manageauth`
-  - `project:create`
-  - `project:adddependencies`
-  - `project:package`
-  - `project:validate`
-  - `project:deploy`
-  - `file:create`
-  - `file:list`
-  - `file:upload`
-  - `file:import`
-  - `object:list`
-  - `object:import`
-  - `object:update`
+Quick links: [Get Started](#get-started) - [Install](#install) - [Publish to npmjs](#publish-to-npmjs) - [Command Coverage](#command-coverage) - [Development](#development)
 
-## Local install and smoke test
+> [!IMPORTANT]
+> Status: production-tested in WSL with browser `account:setup` + `project:deploy` working in Node-only flow.
+
+## Table of Contents
+
+- [Get Started](#get-started)
+- [Install](#install)
+- [Publish to npmjs](#publish-to-npmjs)
+- [Command Coverage](#command-coverage)
+- [Development](#development)
+- [License](#license)
+
+## Get Started
+
+Install globally from npm:
+
+```bash
+npm install -g @sangoi-exe/suitecloud-cli
+suitecloud --version
+suitecloud --help
+```
+
+First account/project flow:
+
+```bash
+suitecloud account:setup
+suitecloud project:deploy
+```
+
+## Install
+
+Build and install from local tarball:
 
 ```bash
 cd packages/node-cli
 npm install
-npm test -- --runInBand
 npm pack
+npm install -g ./sangoi-exe-suitecloud-cli-*.tgz
+suitecloud --version
 ```
 
-Install the generated tarball in an isolated prefix and run startup checks:
+## Publish to npmjs
 
 ```bash
-TEST_ROOT=/tmp/suitecloud-npm-smoke
-PREFIX_DIR=$TEST_ROOT/prefix
-mkdir -p "$PREFIX_DIR"
-npm install -g --prefix "$PREFIX_DIR" ./oracle-suitecloud-cli-*.tgz
-PATH="$PREFIX_DIR/bin:$PATH" suitecloud --help
+npm login
+cd packages/node-cli
+npm publish --access public
 ```
 
-## Notes
+If your npm user/scope is not `@sangoi-exe`, change `packages/node-cli/package.json` `name` before publish.
 
-- This fork targets practical parity for the command set listed above.
-- Live account deploy/validate behavior still depends on your tenant credentials and environment.
+## Command Coverage
+
+Implemented command surface in this fork:
+
+- `account:setup`
+- `account:setup:ci`
+- `account:manageauth`
+- `project:create`
+- `project:adddependencies`
+- `project:package`
+- `project:validate`
+- `project:deploy`
+- `file:create`
+- `file:list`
+- `file:upload`
+- `file:import`
+- `object:list`
+- `object:import`
+- `object:update`
+
+## Development
+
+```bash
+cd packages/node-cli
+npm test -- --runInBand
+```
+
+Node runtime entrypoint:
+
+- `packages/node-cli/src/core/sdkexecutor/NodeSdkExecutor.js`
+
+Detailed CLI docs:
+
+- `packages/node-cli/README.md`
+
+## License
+
+UPL-1.0. See `LICENSE.txt`.
